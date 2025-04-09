@@ -28,8 +28,11 @@ export const handleRunGraphRequest = async (
     graphStore,
   } = config;
   const { next, inputs, diagnostics = false } = request;
-
+  console.dir(inputs);
   let inputsToConsume = next ? undefined : inputs;
+  if (next) {
+    console.log("Next ticket %s present in the request, resume from previous run state", next);
+  }
 
   const resumeFrom = await stateStore?.load(next);
 
@@ -52,6 +55,7 @@ export const handleRunGraphRequest = async (
 
   for await (const result of runner) {
     const { type, data, reply } = result;
+    console.log("Printing each run result from runner...");
     switch (type) {
       case "graphstart": {
         await filter.writeGraphStart(data);
@@ -78,13 +82,16 @@ export const handleRunGraphRequest = async (
         break;
       }
       case "input": {
+        console.log("input state from runner...");
         if (inputsToConsume && Object.keys(inputsToConsume).length > 0) {
           await reply({ inputs: inputsToConsume });
           inputsToConsume = undefined;
           break;
         } else {
           const reanimationState = state.lifecycle().reanimationState();
+          console.log("Prepare store the state")
           const next = await stateStore.save(reanimationState);
+          console.log("Require user input, store the current reanimation state in store with ticket %s", next);
           await filter.writeInput(data, next);
           await writer.close();
           return;
