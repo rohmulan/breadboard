@@ -6,7 +6,7 @@
 
 import type { Request, Response } from "express";
 import * as errors from "../errors.js";
-import type { StorageBoard } from "../store.js";
+import type { StorageBoard, BoardServerStore } from "../store.js";
 
 async function get(_req: Request, res: Response) {
   try {

@@ -19,6 +19,7 @@ import { type BoardServerStore } from "./server/store.js";
 import { loadBoard } from "./server/boards/loader.js";
 import { InMemoryStorageProvider } from "./server/storage-providers/inmemory.js";
 import { FirestoreStorageProvider } from "./server/storage-providers/firestore.js";
+import { ApplicationIntegrationStorageProvider } from "./server/storage-providers/applicationintgration.js";
 
 export type { ServerConfig, StorageProvider };
 
@@ -50,6 +51,8 @@ function createStore(storageProvider: StorageProvider): BoardServerStore {
       return new InMemoryStorageProvider();
     case "firestore":
       return new FirestoreStorageProvider();
+    case "application-integration":
+      return new ApplicationIntegrationStorageProvider();
   }
 }
 

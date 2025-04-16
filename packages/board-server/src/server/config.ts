@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type StorageProvider = "firestore" | "in-memory";
+export type StorageProvider = "firestore" | "in-memory" | "application-integration";
 
 export interface ServerConfig {
   hostname: string;

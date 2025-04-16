@@ -1,9 +1,9 @@
 /**
- * @license
- * Copyright 2024 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-
+  * @license
+  * Copyright 2024 Google LLC
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
 import type {
   GraphDescriptor,
   ReanimationState,
@@ -21,6 +21,12 @@ export type StorageBoard = {
   thumbnail: string;
   graph?: GraphDescriptor;
 };
+
+export class InvalidRequestError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
 
 export interface BoardServerStore {
   /** Get basic information about this server. */
@@ -66,11 +72,25 @@ export interface BoardServerStore {
    * Create a blank board with no graph.
    *
    * TODO This shouldn't really be necessary, we can just use "update"
+   * 
+   * @deprecated migrate to upsertBoard() API.
    */
   createBoard(userId: string, name: string): Promise<void>;
 
   /** Updates the given board. Creates if it doesn't exist. */
+  /** 
+   * Updates the given board. Creates if it doesn't exist. 
+   * 
+   * @deprecated migrate to upsertBoard() API.
+   */
   updateBoard(board: StorageBoard): Promise<void>;
+
+
+  /**
+   * Creates or inserts the given board.
+   * 
+   */
+  upsertBoard(board: Readonly<StorageBoard>): Promise<StorageBoard>;
 
   /** Deletes a board by name */
   deleteBoard(userId: string, boardName: string): Promise<void>;

@@ -11,6 +11,7 @@ import type { ServerConfig } from "../config.js";
 
 import listBoards from "./list.js";
 import createBoard from "./create.js";
+import deleteBoard from "./delete.js";
 import getBoard from "./get.js";
 import post from "./post.js";
 import invokeBoard from "./invoke.js";
@@ -52,6 +53,8 @@ export function serveBoardsAPI(serverConfig: ServerConfig): Router {
   // identifier and do not try to deconstruct it. The board is loaded from
   // storage exactly as named. This is the way.
   router.get("/@:user/:name", loadBoard(), getBoard);
+  router.delete("/@:user/:name", requireAuth(),deleteBoard);
+
   router.post("/@:user/:name", requireAuth(), parseBoardId(), post);
 
   router.post("/@:user/:name/invoke", parseBoardId(), async (req, res) =>
