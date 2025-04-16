@@ -10,21 +10,10 @@ export const IN_MEMORY_SERVER_INFO: ServerInfo = {
 
 const auth = new GoogleAuth();
 
-const PROJECT_ID: string = "ip-prod-testing";
+const PROJECT_ID: string = "fengwantestprovision";
 const REGION: string = "us-east1";
 
 export class ApplicationIntegrationStorageProvider implements BoardServerStore {
-
-  private authToken: string = "";
-
-  // Method to set the runtime variable
-  public setAuthToken(auth: string): void {
-    this.authToken = auth;
-  }
-
-  private getAuthToken(): string {
-    return this.authToken;
-  }
 
   /** API key -> user ID */
   #users: Record<string, string> = {};
@@ -165,10 +154,11 @@ export class ApplicationIntegrationStorageProvider implements BoardServerStore {
     const boardJsonString = JSON.stringify(board);
     // Escape the JSON string for embedding
     const escapedBoardJsonString = JSON.stringify(boardJsonString);
+    const accessToken = await this.getOAuthAccessToken();
     const response = await fetch(url, {
       method: "PATCH",
       headers: {
-        "Authorization": `Bearer ${this.authToken}`,
+        "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: `{"name": "${integrationVersionName}","integrationParameters": [ {"key": "boardConfig", "dataType": "STRING_VALUE", "defaultValue": {"stringValue": `+ escapedBoardJsonString + '}}]}',
@@ -186,10 +176,11 @@ export class ApplicationIntegrationStorageProvider implements BoardServerStore {
     const boardJsonString = JSON.stringify(board);
     // Escape the JSON string for embedding
     const escapedBoardJsonString = JSON.stringify(boardJsonString);
+    const accessToken = await this.getOAuthAccessToken();
     const response = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${this.authToken}`,
+        "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: '{"description":"'+ board.owner +'", "integrationParameters": [ {"key": "boardConfig", "dataType": "STRING_VALUE", "defaultValue": {"stringValue": '+ escapedBoardJsonString + '}}]}',
@@ -209,10 +200,11 @@ export class ApplicationIntegrationStorageProvider implements BoardServerStore {
     }
   
     const url = `https://integrations.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/integrations/${boardName}`;
+    const accessToken = await this.getOAuthAccessToken();
     const response = await fetch(url, {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${this.authToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
     console.log("response", response.status);
@@ -227,10 +219,11 @@ export class ApplicationIntegrationStorageProvider implements BoardServerStore {
     if (userId === "") {
       url = `https://integrations.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/integrations/${integrationName}/versions`;
     }
+    const accessToken = await this.getOAuthAccessToken();
     const response = await fetch(url, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${this.authToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
   

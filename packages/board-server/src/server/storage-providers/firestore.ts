@@ -254,3 +254,9 @@ function getThumbnail(graph?: GraphDescriptor): string {
     if (handle) {
       return handle;
     }
+  } catch (e) {
+    // If an error is encountered, skip the thumbnail
+  }
+
+  return "";
+}
