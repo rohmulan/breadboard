@@ -426,6 +426,8 @@ export class AppPreview extends LitElement {
 
   render() {
     if (this.#appTemplate) {
+      const run = this.run ?? null;
+      const events = run?.events ?? [];
       this.#appTemplate.graph = this.graph;
       this.#appTemplate.run = this.run;
       this.#appTemplate.topGraphResult = this.topGraphResult;
@@ -434,6 +436,9 @@ export class AppPreview extends LitElement {
       this.#appTemplate.isInSelectionState = this.isInSelectionState;
       this.#appTemplate.showingOlderResult = this.showingOlderResult;
       this.#appTemplate.readOnly = false;
+      this.#appTemplate.events = events;
+      this.#appTemplate.status = this.status;
+
     }
 
     return html`
@@ -599,7 +604,7 @@ export class AppPreview extends LitElement {
 
     return html`
       <div id="board-activity-container">
-        <bb-board-activity
+        <bb-board-conversation
           class=${classMap({ collapsed: this.debugEvent !== null })}
           .graphUrl=${graphUrl}
           .run=${run}
@@ -633,7 +638,7 @@ export class AppPreview extends LitElement {
             this.debugEvent = event;
           }}
           name=${Strings.from("LABEL_PROJECT")}
-        ></bb-board-activity>
+        ></bb-board-conversation>
         ${this.debugEvent
           ? html`<bb-event-details
               .event=${this.debugEvent}
