@@ -1,0 +1,122 @@
+{
+    "title": "new_board",
+    "description": "A blank board. Use it as a starting point for your creations.",
+    "version": "0.0.1",
+    "nodes": [
+      {
+        "id": "input-3d8ade42",
+        "type": "input",
+        "metadata": {
+          "visual": {
+            "x": -498,
+            "y": -325,
+            "collapsed": "expanded"
+          },
+          "title": "Input"
+        },
+        "configuration": {
+          "schema": {
+            "properties": {
+              "context": {
+                "type": "array",
+                "title": "Context",
+                "items": {
+                  "type": "object",
+                  "examples": [],
+                  "behavior": [
+                    "llm-content"
+                  ]
+                },
+                "default": "[{\"role\":\"user\",\"parts\":[{\"text\":\"Tell me a joke\"}]}]"
+              }
+            },
+            "type": "object",
+            "required": []
+          }
+        }
+      },
+      {
+        "id": "output-9353fe9c",
+        "type": "output",
+        "metadata": {
+          "visual": {
+            "x": 319,
+            "y": -415,
+            "collapsed": "expanded"
+          },
+          "title": "Output",
+          "logLevel": "debug"
+        },
+        "configuration": {
+          "schema": {
+            "properties": {
+              "context": {
+                "type": "array",
+                "title": "Context",
+                "items": {
+                  "type": "object",
+                  "examples": [],
+                  "behavior": [
+                    "llm-content"
+                  ]
+                },
+                "default": "[{\"parts\":[{\"text\":\"Should I output default?\"}],\"role\":\"user\"}]",
+                "description": ""
+              }
+            },
+            "type": "object",
+            "required": []
+          }
+        }
+      },
+      {
+        "id": "specialist-c9c710ed",
+        "type": "specialist",
+        "metadata": {
+          "visual": {
+            "x": -123,
+            "y": -557,
+            "collapsed": "expanded"
+          },
+          "title": "Model",
+          "logLevel": "debug"
+        },
+        "configuration": {
+          "model": "gemini-1.5-flash-latest",
+          "persona": {
+            "role": "user",
+            "parts": [
+              {
+                "text": ""
+              }
+            ]
+          },
+          "task": {
+            "role": "user",
+            "parts": [
+              {
+                "text": ""
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "input-3d8ade42",
+        "to": "specialist-c9c710ed",
+        "out": "context",
+        "in": "in"
+      },
+      {
+        "from": "specialist-c9c710ed",
+        "to": "output-9353fe9c",
+        "out": "out",
+        "in": "context"
+      }
+    ],
+    "metadata": {
+      "visual": {}
+    }
+  }

@@ -23,6 +23,7 @@ async function runHandler(
   req: Request,
   res: Response
 ): Promise<void> {
+  console.log("Starting point of runBoard API...");
   const store: BoardServerStore = req.app.locals.store;
 
   const boardId: BoardId = res.locals.boardId;
@@ -39,6 +40,7 @@ async function runHandler(
     $diagnostics: diagnostics,
     ...inputs
   } = req.body as Record<string, any>;
+  console.log("The next token(resume ticket) is from the request body %s", next);
   const writer = new WritableStream<RemoteMessage>({
     write(chunk) {
       res.write(`data: ${JSON.stringify(chunk)}\n\n`);
@@ -47,7 +49,11 @@ async function runHandler(
   res.setHeader("Content-Type", "text/event-stream");
   res.statusCode = 200;
 
-  const userId = await verifyKey(inputs, store);
+  // const userId = await verifyKey(inputs, store);
+  // Fetch the key from request token
+  const userId = res.locals.userId;
+  console.log("Get userId from request token: %s", userId);
+
   if (!userId) {
     await writer.write([
       "graphstart",

@@ -6,7 +6,8 @@
 
 import { createServer, createServerConfig } from "./server.js";
 
-const config = createServerConfig({ storageProvider: "application-integration" });
+const config = createServerConfig({ storageProvider: "in-memory" });
+// const config = createServerConfig({ storageProvider: "application-integration" });
 const server = createServer(config);
 
 server.listen(config.port);

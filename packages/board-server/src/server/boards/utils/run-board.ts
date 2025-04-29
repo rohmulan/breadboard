@@ -32,6 +32,7 @@ export const runBoard = async ({
   runStateStore,
   diagnostics = false,
 }: RunBoardArguments): Promise<void> => {
+  console.log("Start running board...");
   const store = getDataStore();
   if (!store) {
     await writer.write([
@@ -75,9 +76,12 @@ export const runBoard = async ({
           if (!next) {
             return undefined;
           }
+          console.log("Trying to load from previous run state with nex ticket %s for user %s", next, user);
           return runStateStore.loadReanimationState(user, next);
         },
         async save(state: ReanimationState) {
+          console.log("Trying to save current run state for user %s", user);
+          console.dir(state);
           return runStateStore.saveReanimationState(user, state);
         },
       },

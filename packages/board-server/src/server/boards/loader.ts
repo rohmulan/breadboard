@@ -45,6 +45,17 @@ export function loadBoard(opts?: { addJsonSuffix?: boolean }): RequestHandler {
       }
       next();
     } catch (e) {
+      if (e instanceof Error) {
+        const errorMessage = e.message;
+        console.log("Catch error while loading boards with error message: %s", errorMessage);
+        if (errorMessage.includes("No credential present in the request")) {
+          res.sendStatus(403);
+        } else if (errorMessage.includes("No owner specified in the request")) {
+          res.sendStatus(400);
+        } else if (errorMessage.includes("Requestor does not match with the board owner")) {
+          res.sendStatus(401);
+        }
+      }
       next(e);
     }
   };

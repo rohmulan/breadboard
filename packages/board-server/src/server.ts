@@ -34,7 +34,7 @@ export function createServer(config: ServerConfig): Express {
   const server = express();
   addMiddleware(server, config);
   server.use(createRouter(config));
-
+  console.log("Bring up server... server config: %s", config);
   return server;
 }
 
@@ -45,6 +45,7 @@ export function addMiddleware(server: Express, config: ServerConfig) {
 }
 
 function createStore(storageProvider: StorageProvider): BoardServerStore {
+  console.log("Create storage store with provider %s", storageProvider);
   switch (storageProvider) {
     case "in-memory":
       return new InMemoryStorageProvider();
