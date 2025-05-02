@@ -1,0 +1,83 @@
+{
+    "title": "demo_board",
+    "description": "A blank board. Use it as a starting point for your creations.",
+    "version": "0.0.1",
+    "nodes": [
+      {
+        "id": "input-04eae35b",
+        "type": "input",
+        "metadata": {
+          "visual": {
+            "x": -507,
+            "y": -351,
+            "collapsed": "expanded"
+          },
+          "title": "Input"
+        },
+        "configuration": {
+          "schema": {
+            "properties": {
+              "context": {
+                "type": "array",
+                "title": "Context",
+                "items": {
+                  "type": "object",
+                  "examples": [],
+                  "behavior": [
+                    "llm-content"
+                  ]
+                },
+                "default": "[{\"role\":\"user\",\"parts\":[{\"text\":\"\"}]}]"
+              }
+            },
+            "type": "object",
+            "required": []
+          }
+        }
+      },
+      {
+        "id": "output-36b2e0d0",
+        "type": "output",
+        "metadata": {
+          "visual": {
+            "x": -55,
+            "y": -330,
+            "collapsed": "expanded"
+          },
+          "title": "Output"
+        },
+        "configuration": {
+          "schema": {
+            "properties": {
+              "context": {
+                "type": "array",
+                "title": "Context",
+                "items": {
+                  "type": "object",
+                  "examples": [],
+                  "behavior": [
+                    "llm-content"
+                  ]
+                },
+                "default": "null"
+              }
+            },
+            "type": "object",
+            "required": []
+          }
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "input-04eae35b",
+        "to": "output-36b2e0d0",
+        "out": "context",
+        "in": "context"
+      }
+    ],
+    "metadata": {
+      "visual": {}
+    }
+  }
+

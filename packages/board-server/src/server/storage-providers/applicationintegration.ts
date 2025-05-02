@@ -1,6 +1,6 @@
 import { blank, type ReanimationState } from "@google-labs/breadboard";
 import type { BoardServerStore, ServerInfo, StorageBoard } from "../store.js";
-import { GoogleAuth } from 'google-auth-library';
+// import { GoogleAuth } from 'google-auth-library';
 
 export const APPLICATION_INTEGRATION_SERVER_INFO: ServerInfo = {
   title: "Application Integration",
@@ -8,7 +8,7 @@ export const APPLICATION_INTEGRATION_SERVER_INFO: ServerInfo = {
   url: "https://example.com/board-server",
 };
 
-const auth = new GoogleAuth();
+// const auth = new GoogleAuth();
 
 const PROJECT_ID: string = "ip-prod-testing";
 const REGION: string = "us-central1";
@@ -46,7 +46,8 @@ export class ApplicationIntegrationStorageProvider implements BoardServerStore {
     try {
       console.log('Attempting to fetch OAuth 2.0 Access token...');
       // The getAccessToken method handles fetching/caching using ADC.
-      const accessToken = await auth.getAccessToken();
+      // const accessToken = await auth.getAccessToken();
+      const accessToken = "hard code token";
 
       if (!accessToken) {
         throw new Error('Failed to fetch Access token, received undefined.');

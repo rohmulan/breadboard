@@ -15,6 +15,8 @@ async function get(_req: Request, res: Response) {
       res.sendStatus(404);
       return;
     }
+    console.log("Printing the board graph when reading board by API");
+    console.dir(board.graph);
     res.json(board.graph);
   } catch (e) {
     errors.serverError(res, (e as Error).message);

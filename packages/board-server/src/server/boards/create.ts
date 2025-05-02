@@ -21,8 +21,13 @@ async function create(req: Request, res: Response): Promise<void> {
   const request = req.body as CreateRequest;
 
   const userId: string = res.locals.userId;
+  const userEmail: string = res.locals.email;
+
   if (!request.owner) {
     request.owner = userId;
+    request.creator = userEmail;
+    console.log("Printing create board request");
+    console.dir(request);
   } else if (request.owner !== userId) {
     res.statusMessage = `Unexpected owner ${request.owner}`;
     res.sendStatus(400);

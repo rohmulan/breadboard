@@ -32,6 +32,7 @@ export const middlewares = {
 
 export function createServer(config: ServerConfig): Express {
   const server = express();
+  console.log("Input server config is %s", config);
   addMiddleware(server, config);
   server.use(createRouter(config));
   console.log("Bring up server... server config: %s", config);

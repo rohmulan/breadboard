@@ -49,13 +49,14 @@ export function getUserCredentials(): RequestHandler {
     console.log("Print current access token from request in auth.ts.getUserCredentials: %s", token);
     if (token) {
       res.locals.accessToken = token;
-      const id = await AccessTokenCache.instance.get(token);
-      console.log("get user_id from current access token: %s", id);
-      if (ok(id)) {
-        res.locals.userId = id;
+      const userInfo = await AccessTokenCache.instance.get(token);
+      console.log("get user_id from current access token: %s", userInfo);
+      if (ok(userInfo)) {
+        console.log("Get UserInfo from access token resolved, id is %s and email is %s", userInfo.id, userInfo.email);
+        res.locals.userId = userInfo.id;
+        res.locals.email = userInfo.email;
       }
     }
-
     next();
   };
 }
@@ -105,12 +106,14 @@ export function requireAccessToken(): RequestHandler {
 
 type UserInfoPayload = {
   id: string;
+  email: string;
 };
 
 const TOKEN_LIFETIME_MS = 1 * 60 * 60 * 1000;
 
 type AccessTokenCacheEntry = {
   id: string;
+  email: string;
   expires: number;
 };
 
@@ -118,7 +121,7 @@ class AccessTokenCache {
   #lastCleanup: number = Date.now();
   #map: Map<string, AccessTokenCacheEntry> = new Map();
 
-  async getUserId(token: string): Promise<Outcome<string>> {
+  async getUserInfo(token: string): Promise<Outcome<UserInfoPayload>> {
     try {
       const userInfo = await fetch(
         "https://www.googleapis.com/oauth2/v2/userinfo",
@@ -129,25 +132,27 @@ class AccessTokenCache {
         }
       );
       const result = (await userInfo.json()) as UserInfoPayload;
-      return result.id;
+      console.log("Printing UserInfoPayload from token while trying to getUserInfo");
+      console.dir(result);
+      return result;
     } catch (e) {
       return { $error: (e as Error).message };
     }
   }
 
-  async get(token: string): Promise<Outcome<string>> {
+  async get(token: string): Promise<Outcome<UserInfoPayload>> {
     const entry = this.#map.get(token);
     if (!entry) {
-      const id = await this.getUserId(token);
-      if (!ok(id)) {
-        return id;
+      const userInfo = await this.getUserInfo(token);
+      if (!ok(userInfo)) {
+        return userInfo;
       }
       const expires = Date.now() + TOKEN_LIFETIME_MS;
-      this.#map.set(token, { id, expires });
-      return id;
+      this.#map.set(token, { id: userInfo.id, email: userInfo.email, expires: expires });
+      return {id: userInfo.id, email: userInfo.email};
     }
     this.#cleanup();
-    return entry.id;
+    return {id: entry.id, email: entry.email};
   }
 
   async #cleanup() {

@@ -510,7 +510,11 @@
 					"type": "string"
 				},
 				"noCodeAgentId": {
-					"description": "The linked no code agent id.",
+					"description": "This is only for agentspace usage. The linked no code agent id. This is a UUID.",
+					"type": "string"
+				},
+				"noCodeAgentParent": {
+					"description": "This is only for agentspace usage. The linked no code agent parent with format: projects/{project}/locations/{location}/collections/{collection}/engines/{engine}",
 					"type": "string"
 				},
 				"order": {

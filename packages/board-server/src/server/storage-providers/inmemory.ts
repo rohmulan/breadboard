@@ -9,8 +9,6 @@ export const IN_MEMORY_SERVER_INFO: ServerInfo = {
 };
 
 export class InMemoryStorageProvider implements BoardServerStore {
-  /** API key -> user ID */
-  // #users: Record<string, string> = {"bb-2g3o2c1pr1o2f5h6512524a18y5b4ss2io3b1mr433a3194d3j":"fengwan@google.com"};
   #users: Record<string, string> = {};
   /** board userId -> name -> boards */
   #boards: Record<string, Record<string, StorageBoard>> = {};
@@ -108,8 +106,16 @@ export class InMemoryStorageProvider implements BoardServerStore {
 
 
   async upsertBoard(board: Readonly<StorageBoard>): Promise<StorageBoard> {
-    const updatedBoard: StorageBoard = {...board, name: board.name || crypto.randomUUID()};
-    this.#boards[updatedBoard.name] = updatedBoard;
+    console.log("Upsert board from inmemory store called");
+    const updatedBoard: StorageBoard = {...board, name: board.name || randomUUID()};
+    console.dir(updatedBoard);
+    if (!updatedBoard.owner) {
+      throw Error("board must have an owner");
+    }
+    if (!this.#boards[updatedBoard.owner]) {
+      this.#boards[updatedBoard.owner] = {};
+    }
+    this.#boards[updatedBoard.owner]![updatedBoard.name] = updatedBoard;
     return updatedBoard;
   }
 
@@ -139,7 +145,7 @@ export class InMemoryStorageProvider implements BoardServerStore {
     _state: ReanimationState
   ): Promise<string> {
     console.log("Save reanimation state for user %s in in-memory store... will resume later", _user);
-    console.dir(_state.states);
+    console.dir(_state);
     const ticket = randomUUID();
     if (!this.#states[_user]) {
       this.#states[_user] = {};

@@ -17,6 +17,9 @@ import { runBoard, timestamp } from "./utils/run-board.js";
 import { verifyKey } from "./utils/verify-key.js";
 import type { BoardServerStore } from "../store.js";
 import type { BoardId } from "../types.js";
+import {InMemoryStorageProvider} from "../storage-providers/inmemory.js";
+
+
 
 async function runHandler(
   config: ServerConfig,
@@ -25,6 +28,10 @@ async function runHandler(
 ): Promise<void> {
   console.log("Starting point of runBoard API...");
   const store: BoardServerStore = req.app.locals.store;
+
+  console.log("Printing BoardServerStore from request for run board API and check whether its type is inmemory store %s", store instanceof InMemoryStorageProvider);
+  console.log("Printing the run board request to check what it looks like...");
+  // console.dir(req);
 
   const boardId: BoardId = res.locals.boardId;
   const path = asPath(boardId.user, boardId.name);
@@ -38,6 +45,8 @@ async function runHandler(
   const {
     $next: next,
     $diagnostics: diagnostics,
+    $board: board,
+    $state: state,
     ...inputs
   } = req.body as Record<string, any>;
   console.log("The next token(resume ticket) is from the request body %s", next);
@@ -79,6 +88,25 @@ async function runHandler(
     res.end();
     return;
   }
+
+  if (board) {
+    console.log("Board data is present in the request body and printing the board object");
+    console.dir(board);
+    await store.upsertBoard({
+      name: boardId.name,
+      owner: userId,
+      displayName: board.title || boardId.name,
+      description: board.description ?? "",
+      tags: board.metadata?.tags ?? [],
+      thumbnail: "",
+      graph: board,
+    });
+  }
+  // if (state) {
+
+  // }
+  // TODO(jimmyxing)
+  // Store the reanimation state as well...
 
   await runBoard({
     serverUrl,
