@@ -12,6 +12,10 @@ import {
 } from "@breadboard-ai/types";
 import { GraphToRun, Kit } from "../types.js";
 import { DataPartTransformer } from "../data/types.js";
+import {
+  TypedEventTarget,
+  TypedEventTargetType,
+} from "../utils/typed-event-target.js";
 
 export type GraphProviderItem = {
   url: string;
@@ -129,11 +133,14 @@ export type GraphProvider = {
    * Given a URL, saves a `GraphDescriptor` instance to that URL.
    * @param url -- the URL to save.
    * @param descriptor -- the Graph Descriptor to save.
+   * @param userInitiated -- whether or not the user initiated the save,
+   *      as opposed to auto-save.
    * @returns -- the result of saving, with an error if saving failed.
    */
   save: (
     url: URL,
-    descriptor: GraphDescriptor
+    descriptor: GraphDescriptor,
+    userInitiated: boolean
   ) => Promise<{ result: boolean; error?: string }>;
   /**
    * Creates a blank board at the given URL
@@ -306,6 +313,13 @@ export interface BoardServerCapabilities {
   refresh: boolean;
   watch: boolean;
   preview: boolean;
+  events?: boolean;
+  /**
+   * Whether or not the board server manages saving itself. If true,
+   * the client is encouraged to not debounce saves and just invoke
+   * `save` whenever the graph is updated.
+   */
+  autosave?: boolean;
 }
 
 export interface BoardServerConfiguration {
@@ -318,7 +332,27 @@ export interface BoardServerConfiguration {
   capabilities: BoardServerCapabilities;
 }
 
-export interface BoardServer extends GraphProvider, BoardServerConfiguration {
+export type BoardServerSaveEventStatus =
+  | "idle"
+  | "debouncing"
+  | "queued"
+  | "saving";
+
+export type BoardServerSaveStatusChangeEvent = Event & {
+  status: BoardServerSaveEventStatus;
+  url: string;
+};
+
+export type BoardServerEventMap = {
+  savestatuschange: BoardServerSaveStatusChangeEvent;
+};
+
+export type BoardServerEventTarget = TypedEventTarget<BoardServerEventMap>;
+
+export interface BoardServer
+  extends GraphProvider,
+    BoardServerConfiguration,
+    TypedEventTargetType<BoardServerEventMap> {
   user: User;
   getAccess(url: URL, user: User): Promise<Permission>;
 }

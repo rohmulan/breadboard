@@ -12,8 +12,9 @@ const MODALITY: readonly string[] = [
   "Any",
   "Audio",
   "Image",
-  "Video",
+  "Text",
   "Upload File",
+  "Video",
 ] as const;
 
 type Modality = (typeof MODALITY)[number];
@@ -50,11 +51,12 @@ function toInput(title: string, modality: Modality | undefined) {
 }
 
 const ICONS: Record<Modality, string> = {
-  Any: "multimodal",
-  Audio: "audio",
-  Video: "video",
+  Any: "asterisk",
+  Audio: "mic",
+  Video: "videocam",
   Image: "image",
-  "Upload File": "file",
+  "Upload File": "upload",
+  Text: "edit_note",
 };
 
 const HINTS: Record<Modality, BehaviorSchema> = {
@@ -63,14 +65,24 @@ const HINTS: Record<Modality, BehaviorSchema> = {
   Video: "hint-image",
   Image: "hint-image",
   "Upload File": "hint-text",
+  Text: "hint-text",
 };
 
 function computeIcon(modality?: Modality): string {
-  return (modality && ICONS[modality]) || "multimodal";
+  return (modality && ICONS[modality]) || "asterisk";
 }
 
 function computeHint(modality?: Modality): BehaviorSchema {
   return (modality && HINTS[modality]) || "hint-multimodal";
+}
+
+function combineModalities(modalities: readonly string[]): SchemaEnumValue[] {
+  const schemaEnum: SchemaEnumValue[] = modalities.map((modality) => ({
+    id: modality,
+    title: modality,
+    icon: ICONS[modality],
+  }));
+  return schemaEnum;
 }
 
 async function invoke({
@@ -88,7 +100,7 @@ async function invoke({
     details = substituting;
   }
   await report({
-    actor: "Ask User",
+    actor: "User Input",
     category: "Requesting Input",
     name: "",
     details,
@@ -120,7 +132,7 @@ async function describe({
         },
         "p-modality": {
           type: "string",
-          enum: MODALITY as string[],
+          enum: combineModalities(MODALITY),
           behavior: ["config", "hint-preview"],
           icon,
           title: "Input type",
@@ -144,7 +156,7 @@ async function describe({
       },
       additionalProperties: false,
     } satisfies Schema,
-    title: "Ask User",
+    title: "User Input",
     metadata: {
       icon: "ask-user",
       tags: ["quick-access", "core", "input"],

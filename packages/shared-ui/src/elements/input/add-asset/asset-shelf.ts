@@ -49,6 +49,12 @@ export class AssetShelf extends LitElement {
           width: 100%;
           height: 100%;
           border-radius: var(--bb-grid-size-2);
+
+          > * {
+            display: block;
+            height: 100%;
+            border-radius: var(--bb-grid-size-2);
+          }
         }
 
         & .text,
@@ -130,6 +136,7 @@ export class AssetShelf extends LitElement {
 
   removeAsset(removedAsset: LLMContent) {
     this.#assets = this.#assets.filter((asset) => asset !== removedAsset);
+    this.dispatchEvent(new Event("assetchanged"));
     requestAnimationFrame(() => {
       this.requestUpdate();
     });

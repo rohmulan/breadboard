@@ -95,8 +95,25 @@ export class FirestoreStorageProvider
   async listBoards(userId: string): Promise<StorageBoard[]> {
     const boards: StorageBoard[] = [];
 
-    const docs = await this.#database.collectionGroup("boards").get();
+    // 1) get user's boards
+    const docs = await this.#database
+      .collection(`workspaces/${userId}/boards`)
+      .get();
+
     docs.forEach((doc: DocumentSnapshot): void => {
+      const board = asStorageBoard(doc, userId, { requirePublished: true });
+      if (board) {
+        boards.push(board);
+      }
+    });
+
+    // 2) get featured boards
+    const featured = await this.#database
+      .collectionGroup("boards")
+      .where("tags", "array-contains", "featured")
+      .get();
+
+    featured.forEach((doc: DocumentSnapshot): void => {
       const board = asStorageBoard(doc, userId, { requirePublished: true });
       if (board) {
         boards.push(board);
@@ -151,20 +168,39 @@ export class FirestoreStorageProvider
     if (!board.name) {
       throw new InvalidRequestError("Firestore requires board's name");
     }
-    await this.#getBoardDoc(board.owner, board.name).set({
+    const doc = this.#getBoardDoc(board.owner, board.name);
+
+    // The "featured" tag is not something the client has access to or should be
+    // able to modify (because otherwise anybody could make something
+    // featured!). We instead set it manually through the Firebase UI as an
+    // admin. So, we should ignore if it did come from the client, but also we
+    // should preserve it if it was already there.
+    const wasAlreadyFeatured = ((await doc.get()).data()?.tags ?? []).includes(
+      "featured"
+    );
+    const tags = board.tags
+      ? board.tags.filter((tag) => tag !== "featured")
+      : [];
+    if (wasAlreadyFeatured) {
+      tags.push("featured");
+    }
+
+    await doc.set({
       name: board.name,
       title: board.displayName || "",
       description: board.description || "",
-      tags: board.tags || [],
+      tags,
       graph: JSON.stringify(board.graph || {}),
     });
   }
 
-  async upsertBoard(board: Readonly<Partial<StorageBoard>>): Promise<StorageBoard> {
+  async upsertBoard(
+    board: Readonly<Partial<StorageBoard>>
+  ): Promise<StorageBoard> {
     const name = board.name || crypto.randomUUID();
-    const updatedBoard: Partial<StorageBoard> = {...board, name};
+    const updatedBoard: Partial<StorageBoard> = { ...board, name };
     await this.updateBoard(updatedBoard);
-    const result = await this.loadBoard({name, owner: updatedBoard.owner});
+    const result = await this.loadBoard({ name, owner: updatedBoard.owner });
     if (!result) {
       throw new Error(`Failed to create the board ${updatedBoard.name}`);
     }

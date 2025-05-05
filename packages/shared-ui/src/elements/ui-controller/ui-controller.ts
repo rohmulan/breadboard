@@ -74,7 +74,17 @@ import {
   createWorkspaceSelectionChangeId,
 } from "../../utils/workspace.js";
 import { icons } from "../../styles/icons.js";
-import { GoogleDriveSharePanel } from "../elements.js";
+import {
+  type GoogleDriveSharePanel,
+  type GoogleDrivePicker,
+} from "../elements.js";
+import { consume } from "@lit/context";
+import {
+  type SigninAdapter,
+  signinAdapterContext,
+} from "../../utils/signin-adapter.js";
+import { findGoogleDriveAssetsInGraph } from "../google-drive/find-google-drive-assets-in-graph.js";
+import { loadDriveApi } from "../google-drive/google-apis.js";
 
 const SIDE_ITEM_KEY = "bb-ui-controller-side-nav-item";
 
@@ -220,6 +230,10 @@ export class UI extends LitElement {
   @state()
   accessor #showEditHistory = false;
 
+  @consume({ context: signinAdapterContext })
+  @property({ attribute: false })
+  accessor signinAdapter: SigninAdapter | undefined = undefined;
+
   #autoFocusEditorOnRender = false;
   #sideNavItem:
     | "activity"
@@ -228,7 +242,8 @@ export class UI extends LitElement {
     | "editor"
     | "app-view" = "editor";
   #moduleEditorRef: Ref<ModuleEditor> = createRef();
-  #sharePanelRef: Ref<GoogleDriveSharePanel> = createRef();
+  #googleDriveSharePanelRef: Ref<GoogleDriveSharePanel> = createRef();
+  #googleDriveAssetAccessPickerRef: Ref<GoogleDrivePicker> = createRef();
 
   static styles = [icons, uiControllerStyles];
 
@@ -248,9 +263,9 @@ export class UI extends LitElement {
 
   editorRender = 0;
   #preventAutoSwitchToEditor = false;
-  protected willUpdate(changedProperties: PropertyValues): void {
-    if (changedProperties.has("isShowingBoardActivityOverlay")) {
-      this.editorRender++;
+  protected willUpdate(changedProperties: PropertyValues<this>): void {
+    if (changedProperties.has("graph")) {
+      this.updateComplete.then(() => this.#checkGoogleDriveAssetsAreReadable());
     }
 
     if (changedProperties.has("selectionState")) {
@@ -479,11 +494,7 @@ export class UI extends LitElement {
           .items.get("Enable Custom Step Creation")?.value
       : false;
 
-    const showAssetsInGraph = this.settings
-      ? this.settings
-          .getSection(SETTINGS_TYPE.GENERAL)
-          .items.get("Show Assets in Graph")?.value
-      : false;
+    const showAssetsInGraph = true;
 
     const graph = this.editor?.inspect("") || null;
     let capabilities: false | GraphProviderCapabilities = false;
@@ -655,90 +666,6 @@ export class UI extends LitElement {
           this.sideNavItem,
         ],
         () => {
-          let topGraphResult = this.topGraphResult;
-          let isInSelectionState = false;
-          let showingOlderResult = false;
-          const mainBoardSelection =
-            this.selectionState?.selectionState.graphs.get(MAIN_BOARD_ID);
-          if (
-            mainBoardSelection &&
-            mainBoardSelection.nodes.size === 1 &&
-            this.topGraphResult
-          ) {
-            isInSelectionState = true;
-            topGraphResult = {
-              currentNode: structuredClone(this.topGraphResult.currentNode),
-              log: structuredClone(this.topGraphResult.log),
-              status: this.topGraphResult.status,
-            } as TopGraphRunResult;
-
-            const currentItem = [...mainBoardSelection.nodes][0];
-            if (currentItem) {
-              // Truncate the topGraphResult log to the end of the current
-              // item.
-              let currentItemId: string | null = null;
-              for (let i = 0; i < topGraphResult.log.length; i++) {
-                const entry = topGraphResult.log[i];
-                if (currentItemId !== null) {
-                  if (
-                    entry.type === "node" &&
-                    entry.descriptor.id !== currentItem
-                  ) {
-                    topGraphResult.log.length = i;
-                    break;
-                  }
-
-                  if (
-                    entry.type === "edge" &&
-                    entry.id?.startsWith(currentItemId)
-                  ) {
-                    // Include this edge value if it is an input.
-                    topGraphResult.log.length =
-                      entry.descriptor?.type === "input" ? i + 1 : i;
-                    break;
-                  }
-                }
-
-                if (entry.type !== "node") {
-                  continue;
-                }
-
-                if (entry.descriptor.id === currentItem) {
-                  currentItemId = entry.id;
-                  topGraphResult.currentNode = entry;
-                }
-              }
-
-              // If we are at the head of the topGraphResult just use whatever
-              // its status is. If it's earlier in the run then we decide
-              // based on the most recent item. If it's an open edge then we
-              // consider it to be running, otherwise it is paused.
-              if (topGraphResult.log.length < this.topGraphResult.log.length) {
-                showingOlderResult = true;
-                const newestItem = topGraphResult.log.at(-1);
-                if (newestItem?.type === "edge" && newestItem.end === null) {
-                  topGraphResult.status = "running";
-                } else {
-                  topGraphResult.status = "paused";
-                }
-              } else {
-                if (topGraphResult.currentNode?.descriptor.id !== currentItem) {
-                  // Tip of tree. Check to see if we've seen the currently
-                  // selected node. If not then this is a future node and we
-                  // should therefore remove the entire state.
-                  topGraphResult.currentNode = null;
-                  topGraphResult.log.length = 0;
-                  topGraphResult.status = "paused";
-                }
-              }
-            } else {
-              console.warn(
-                "Error with selection state",
-                this.selectionState?.selectionState
-              );
-            }
-          }
-
           return html`<bb-app-preview
             class=${classMap({
               active: this.sideNavItem === "app-view",
@@ -747,10 +674,10 @@ export class UI extends LitElement {
             .themeHash=${themeHash}
             .run=${run}
             .eventPosition=${eventPosition}
-            .topGraphResult=${topGraphResult}
+            .topGraphResult=${this.topGraphResult}
             .showGDrive=${this.signedIn}
-            .isInSelectionState=${isInSelectionState}
-            .showingOlderResult=${showingOlderResult}
+            .isInSelectionState=${false}
+            .showingOlderResult=${false}
             .settings=${this.settings}
             .boardServers=${this.boardServers}
             .status=${this.status}
@@ -944,9 +871,14 @@ export class UI extends LitElement {
       html`
         <bb-google-drive-share-panel
           .graph=${this.graph}
-          ${ref(this.#sharePanelRef)}
+          ${ref(this.#googleDriveSharePanelRef)}
         >
         </bb-google-drive-share-panel>
+        <bb-google-drive-picker
+          ${ref(this.#googleDriveAssetAccessPickerRef)},
+          mode="pick-shared-assets"
+        >
+        </bb-google-drive-picker>
       `,
     ];
   }
@@ -1008,6 +940,61 @@ export class UI extends LitElement {
   }
 
   openSharePanel() {
-    this.#sharePanelRef?.value?.open();
+    this.#googleDriveSharePanelRef?.value?.open();
+  }
+
+  async #checkGoogleDriveAssetsAreReadable() {
+    if (!this.graph) {
+      return;
+    }
+    const driveAssetFileIds = findGoogleDriveAssetsInGraph(this.graph);
+    if (driveAssetFileIds.length === 0) {
+      return;
+    }
+    const drive = await loadDriveApi();
+    const auth = await this.signinAdapter?.refresh();
+    if (auth?.state !== "valid") {
+      console.error(`Expected "valid" auth state, got "${auth?.state}"`);
+      return;
+    }
+    const needsPicking: string[] = [];
+    await Promise.all(
+      driveAssetFileIds.map(async (fileId) => {
+        try {
+          await drive.files.get({
+            access_token: auth.grant.access_token,
+            fileId,
+          });
+        } catch (error) {
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            "status" in error &&
+            error.status === 404
+          ) {
+            needsPicking.push(fileId);
+          } else {
+            console.error(
+              "Unhandled error checking drive asset readability:",
+              error
+            );
+          }
+        }
+      })
+    );
+    if (needsPicking.length > 0) {
+      const picker = this.#googleDriveAssetAccessPickerRef.value;
+      if (picker) {
+        picker.fileIds = needsPicking;
+        picker.open();
+        picker.addEventListener(
+          "close",
+          () => {
+            picker.fileIds = [];
+          },
+          { once: true }
+        );
+      }
+    }
   }
 }

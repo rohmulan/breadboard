@@ -108,22 +108,6 @@ export class ContinueEvent extends Event {
   }
 }
 
-export class SaveEvent extends Event {
-  static eventName = "bbsave";
-
-  constructor() {
-    super(SaveEvent.eventName, { ...eventInit });
-  }
-}
-
-export class SaveAsEvent extends Event {
-  static eventName = "bbsaveas";
-
-  constructor() {
-    super(SaveAsEvent.eventName, { ...eventInit });
-  }
-}
-
 export class BoardTitleUpdateEvent extends Event {
   static eventName = "bbboardtitleupdate";
 
@@ -1546,7 +1530,10 @@ export class ShowAssetOrganizerEvent extends Event {
 export class AddAssetRequestEvent extends Event {
   static eventName = "bbaddassetrequest";
 
-  constructor(public readonly assetType: string) {
+  constructor(
+    public readonly assetType: string,
+    public readonly allowedMimeTypes: string | null = null
+  ) {
     super(AddAssetRequestEvent.eventName, { ...eventInit });
   }
 }
@@ -1582,5 +1569,15 @@ export class ParamDeleteEvent extends Event {
     public readonly path: string
   ) {
     super(ParamDeleteEvent.eventName, { ...eventInit });
+  }
+}
+
+/** Board */
+
+export class BoardDeleteEvent extends Event {
+  static eventName = "bbboarddelete";
+
+  constructor(public readonly url: string) {
+    super(BoardDeleteEvent.eventName, { ...eventInit });
   }
 }

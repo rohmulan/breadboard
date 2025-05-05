@@ -153,6 +153,7 @@ export class Template extends LitElement implements AppTemplate {
   #resizeObserver? : ResizeObserver;
 
 
+  #allowedMimeTypes: string | null = null;
 
   get additionalOptions() {
     return {
@@ -588,7 +589,10 @@ export class Template extends LitElement implements AppTemplate {
 
         if (typeof value === "string") {
           if (input.dataset.type === "llm-content") {
-            inputValues[input.name] = this.#toLLMContentWithTextPart(value);
+            inputValues[input.name] =
+              input.dataset.empty === "true"
+                ? { parts: [] }
+                : this.#toLLMContentWithTextPart(value);
           } else if (input.dataset.type === "llm-content-array") {
             inputValues[input.name] = [this.#toLLMContentWithTextPart(value)];
           } else {
@@ -707,6 +711,81 @@ export class Template extends LitElement implements AppTemplate {
         const disabled =
           valueIsDefined && (valueHasKeys || valueIsNonEmptyArray);
 
+        // We have to inspect the properties to determine what is allowed here,
+        // but it is theoretically possible for multiple properties to define
+        // different allowed values. For now we just roll through and pick out
+        // the first one and go with what it says.
+        let allowAddAssets = false;
+
+        // Setting this to null will allow all default types through.
+        let allowedUploadMimeTypes: string | null = null;
+        let textToSpeech = false;
+        let textInput = false;
+
+        const supportedActions = {
+          upload: false,
+          youtube: false,
+          drawable: false,
+          gdrive: false,
+        };
+
+        propSearch: for (const [, prop] of props) {
+          if (!prop.format) {
+            continue;
+          }
+
+          switch (prop.format) {
+            case "upload": {
+              allowAddAssets = true;
+              supportedActions.upload = true;
+              break propSearch;
+            }
+
+            case "mic": {
+              allowAddAssets = true;
+              allowedUploadMimeTypes = "audio/*";
+              supportedActions.upload = true;
+              break propSearch;
+            }
+
+            case "videocam": {
+              allowAddAssets = true;
+              allowedUploadMimeTypes = "video/*";
+              supportedActions.upload = true;
+              supportedActions.youtube = true;
+              break propSearch;
+            }
+
+            case "image": {
+              allowAddAssets = true;
+              allowedUploadMimeTypes = "image/*";
+              supportedActions.upload = true;
+              break propSearch;
+            }
+
+            case "edit_note": {
+              allowAddAssets = true;
+              allowedUploadMimeTypes = "text/*";
+              supportedActions.upload = true;
+              textToSpeech = true;
+              textInput = true;
+              break propSearch;
+            }
+
+            default: {
+              // Any.
+              allowAddAssets = true;
+              textToSpeech = true;
+              textInput = true;
+              supportedActions.upload = true;
+              supportedActions.youtube = true;
+              supportedActions.drawable = true;
+              supportedActions.gdrive = true;
+              break propSearch;
+            }
+          }
+        }
+
         inputContents = html`
      
 
@@ -764,8 +843,6 @@ export class Template extends LitElement implements AppTemplate {
     if (topGraphResult.status === "stopped" && topGraphResult.log.length > 0) {
       status = "finished";
     }
-
-    this.#hasFocusableInput = active;
 
     return html`<div
       @transitionend=${() => {
@@ -1032,6 +1109,7 @@ export class Template extends LitElement implements AppTemplate {
     if (this.showAddAssetModal) {
       addAssetModal = html`<bb-add-asset-modal
         .assetType=${this.#addAssetType}
+        .allowedMimeTypes=${this.#allowedMimeTypes}
         @bboverlaydismissed=${() => {
           this.showAddAssetModal = false;
         }}
@@ -1072,6 +1150,7 @@ export class Template extends LitElement implements AppTemplate {
       @bbaddassetrequest=${(evt: AddAssetRequestEvent) => {
         this.showAddAssetModal = true;
         this.#addAssetType = evt.assetType;
+        this.#allowedMimeTypes = evt.allowedMimeTypes;
       }}
     >
       <div id="content">${content}</div>
