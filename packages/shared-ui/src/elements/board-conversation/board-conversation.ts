@@ -428,6 +428,10 @@ export class BoardConversation extends LitElement {
 
     return html`
     ${repeat(userInputs, (inputNode) => {
+      if (inputNode.schema?.description === "Provide feedback or click submit to continue")
+        {
+          return nothing;
+        }
       return html`
       <div class="user-output pending-input-label">
             <div class="flow">
@@ -571,7 +575,7 @@ export class BoardConversation extends LitElement {
       }
 
       const label = html`
-       ${type === "input" || !port.schema.title
+       ${(type === "input" || !port.schema.title) && port.schema.description !== "Provide feedback or click submit to continue"
           ? html`<div class="user-input-label">${port.schema.description}</label>`
           : nothing}
       `

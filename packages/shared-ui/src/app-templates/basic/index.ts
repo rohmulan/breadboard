@@ -84,6 +84,7 @@ interface Turn {
   fixedReply?: string;
 }
 import { maybeConvertToYouTube } from "../../utils/substitute-input";
+import { transpileModule } from "typescript";
 
 @customElement("app-basic")
 export class Template extends LitElement implements AppTemplate {
@@ -518,14 +519,39 @@ export class Template extends LitElement implements AppTemplate {
   const height = this.conversationScroller.clientHeight;
   const introductionHeight = this.renderRoot.querySelector('.introduction')?.clientHeight ?? 0;
   const userInputHeight = this.#getLastUserInputHeight();
-  console.log('making last turn height:', height - (userInputHeight === 0? introductionHeight : userInputHeight) - 40 - /* small padding to avoid parasitic scrollbar */ 3);
   this.conversationScroller.style.setProperty(
     '--conversation-client-height',
     `${height - (userInputHeight === 0? introductionHeight : userInputHeight) - 40 - /* small padding to avoid parasitic scrollbar */ 3}px`,
   );
 }
 
-#hasFocusableInput = false;
+#disableTyping() {
+  const topGraphResult = this.topGraphResult;
+  console.log(topGraphResult);
+  if (!!topGraphResult && topGraphResult.status === "stopped" && topGraphResult.log.length > 0) {
+    console.log('Ended now. Disable typing. ');
+    return true;
+  }
+  return false;
+}
+  #checkIsEmpty() {
+    if (!this.#inputRef.value) {
+      console.log('input ref is empty.')
+      return true;
+    }
+    const inputs = this.#inputRef.value.querySelectorAll<
+    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >("input,select,textarea");
+    for (const input of inputs) {
+      const value = input.value;
+      if (!!value && value !== '') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  #hasFocusableInput = false;
   #renderInput(topGraphResult: TopGraphRunResult) {
     const placeholder = html`<div class="user-input">
         <p>&nbsp;</p>
@@ -543,6 +569,7 @@ export class Template extends LitElement implements AppTemplate {
       const inputs = this.#inputRef.value.querySelectorAll<
         HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
       >("input,select,textarea");
+     
       const assetShelf =
         this.#inputRef.value.querySelector<AssetShelf>("bb-asset-shelf");
       const inputValues: OutputValues = {};
@@ -638,7 +665,7 @@ export class Template extends LitElement implements AppTemplate {
           <div class="action-group">
             <button
               id="continue"
-              ?disabled=${topGraphResult.status === 'running'}
+              ?disabled=${topGraphResult.status === 'running' || this.#checkIsEmpty()}
               @click=${() => {
                 continueRun(currentItem.id ?? "unknown");
               }}
@@ -704,10 +731,13 @@ export class Template extends LitElement implements AppTemplate {
                 type="text"
                 data-type=${dataType}
                 .value=${inputValue}
+                ?disabled=${this.#disableTyping()}
                 @keydown=${(e: KeyboardEvent) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    continueRun(currentItem.id ?? "unknown");
+                    if (!this.#checkIsEmpty()) {
+                      continueRun(currentItem.id ?? "unknown");
+                    }
                   }
                 }}
               ></textarea>
@@ -753,8 +783,10 @@ export class Template extends LitElement implements AppTemplate {
         if (!(evt.key === "Enter" && isCtrlCommand)) {
           return;
         }
+        if (!this.#checkIsEmpty()) {
 
-        continueRun("unknown");
+          continueRun("unknown");
+        }
       }}
       id="input"
       class=${classMap({ active, [status]: true })}
