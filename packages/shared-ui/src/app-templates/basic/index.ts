@@ -636,18 +636,20 @@ export class Template extends LitElement implements AppTemplate {
           </button>
           </div>
           <div class="action-group">
-            <button
+            ${topGraphResult.status !== 'running' ? 
+              html`<button
               id="continue"
-              ?disabled=${topGraphResult.status === 'running'}
               @click=${() => {
                 continueRun(currentItem.id ?? "unknown");
               }}
             >
               Continue
-            </button>
+            </button>`
+              : nothing}
             ${topGraphResult.status === 'running'
               ? html`
               <button id="stop"
+              title="Stop execution"
               @click=${() => {
               this.dispatchEvent(new RunEvent());
               }}>
