@@ -225,11 +225,8 @@ class SigninAdapter {
     let getResponse:GetResponse|undefined = undefined;
     const internalId = setInterval(
       async () => {
-        console.log('Trying to get token!!!');
         if (getResponse && getResponse.access_token) {
-          console.log('get response not empty', getResponse);
         } else {
-          console.log('get response is empty');
           getResponse = await this.getTokenFromConnection(nonce);
           if (getResponse && getResponse.access_token) {
             const connection = await this.#getConnection();
@@ -258,7 +255,6 @@ class SigninAdapter {
                 this.#settingsHelper
               )
             );
-            console.log('stored in cache!!!');
           }
         }
       },
@@ -267,7 +263,6 @@ class SigninAdapter {
 
     setTimeout(
       () => {
-        console.log('30 seconds elapsed. Stopping interval');
         if (internalId) {
           clearInterval(internalId);
         }

@@ -635,9 +635,13 @@ export class Template extends LitElement implements AppTemplate {
 
     let inputContents: HTMLTemplateResult | symbol = nothing;
     let active = false;
+    let secretPart: HTMLTemplateResult | symbol = nothing;
     const currentItem = topGraphResult.log.at(-1);
     if (currentItem?.type === "edge") {
       const props = Object.entries(currentItem.schema?.properties ?? {});
+      if (this.run && this.run.events.at(-1)?.type === "secret") { 
+        secretPart = this.#renderSecretInput();
+      }
 
       const controls = html`<div class="controls">
       <div class="action-group">
@@ -788,7 +792,7 @@ export class Template extends LitElement implements AppTemplate {
 
         inputContents = html`
      
-
+          ${secretPart}
           ${repeat(props.length > 0 ? props : [["", {}]], ([name, schema]) => {
             const dataType = isLLMContentArrayBehavior(schema)
               ? "llm-content-array"
@@ -877,12 +881,11 @@ export class Template extends LitElement implements AppTemplate {
   }
 
   #renderSecretInput() {
-    if (this.run && this.run.events.at(-1)?.type === "secret") { 
-    const secretEvent = this.run.events.at(-1) as InspectableRunSecretEvent;
+    const secretEvent = this.run!.events.at(-1) as InspectableRunSecretEvent;
 
     let active = true;
     // TODO: figure out what we should do for these secrets and remove display:none.
-    let inputContents = html`
+    return html`
       <div class="user-input">
         <p class="api-message">
           When calling an API, the API provider's applicable privacy policy
@@ -905,46 +908,7 @@ export class Template extends LitElement implements AppTemplate {
           }
         })}
       </div>`;
-    }
-  }
-
-  #renderConversations() {
-    return html `
-      <div class="conversations">
-        <div class="conversations-content">
-          ${map(this.#turns, (turn: Turn) => {
-            return html `
-              <div class="turn ${classMap({
-                  'last': turn === this.#turns.at(-1),
-                })}">
-                ${when(turn.query, () => this.#renderQuery(turn.query))}
-                ${when(!!turn.reply, () =>this.#renderSummary(turn.reply))}
-                ${when(turn.fixedReply, () => this.#renderIntroduction(turn.fixedReply))}
-              </div>
-            `;
-          })}
-        </div>
-      </div>
-    `;
-  }
-
-  #renderQuery(query: string | undefined) {
-    return html `
-      <div class="question-block">
-        <div class="question-wrapper">
-          <p class="question-bubble">${query}</p>
-        </div>
-      </div>
-        `;
-  }
-
-  #renderSummary(topGraphResult: TopGraphRunResult | undefined) {
-    if (!!topGraphResult) {
-      const value = topGraphResult.currentNode?.descriptor;
-      return html `<div class="summary">${value}</div>`;
-    } else {
-      return html `<div class="summary">PLACEHOLDER</div>`;
-    }
+    
   }
 
   #totalNodeCount = 0;
