@@ -44,7 +44,6 @@ export type EditStepFlowGenConstraint = {
 };
 
 export interface SystemInstructionParams {
-  userEmail?: string;
   agentName?: string;
   agentGoal?: string;
   agentInstructions?: string;
@@ -80,8 +79,6 @@ export class FlowGenerator {
       throw new Error(intent.slice("/force error ".length));
     }
     const params: SystemInstructionParams = {
-      // TODO fetch the email from token and set here
-      userEmail: "jimmyxing@google.com",
       agentName: agentspaceFlowContext?.agentName,
       agentGoal: agentspaceFlowContext?.agentGoal,
       agentInstructions: agentspaceFlowContext?.agentInstructions
@@ -262,7 +259,6 @@ export class FlowGenerator {
     const now = new Date();
     const timeString = now.toDateString();
     const userInfo = `**User information:**
-* The user's email address is ${params.userEmail || ''}.
 * The current time where the user is located is ${timeString}.`;
     const agentName = `** User provided agent name:** ${params.agentName || ''}`;
     const agentGoal = `** User provided agent goal:** ${params.agentGoal || ''}`;
