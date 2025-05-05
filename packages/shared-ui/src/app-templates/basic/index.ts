@@ -666,7 +666,7 @@ export class Template extends LitElement implements AppTemplate {
             ${topGraphResult.status !== 'running' ? 
               html`<button
               id="continue"
-              ?disabled=${topGraphResult.status === 'running' || this.#checkIsEmpty()}
+              ?disabled=${this.#checkIsEmpty()}
               @click=${() => {
                 continueRun(currentItem.id ?? "unknown");
               }}
