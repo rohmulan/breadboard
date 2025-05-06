@@ -602,7 +602,7 @@ export class BoardConversation extends LitElement {
         } else {
           renderableValue = html`${nodeValue !== undefined
             ? nodeValue
-            : html`<span class="no-value">[No value provided]</span>`}`;
+            : nothing}`;
         }
 
         // prettier-ignore
@@ -758,8 +758,22 @@ export class BoardConversation extends LitElement {
                   }
 
                   case "error": {
-                    const output = formatError(event.error);
-                    content = html`<div class="error-content">${output}</div>`;
+                    let output = formatError(event.error);
+                    
+                    if(output == "[object Object]") {
+                      output = "Something went wrong."
+                    }
+                    console.log({event, output});
+
+                    content = html`
+                            <div class="flow">
+                                <div class="label-container">
+                                <div class="label">
+                                  ${output}
+                                </div>
+                                </div>
+                            </div>
+                    `;
                     break;
                   }
 

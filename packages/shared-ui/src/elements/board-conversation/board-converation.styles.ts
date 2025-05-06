@@ -464,8 +464,7 @@ export const styles = css`
   }
 
   .activity-entry.error {
-    color: #cc0000;
-    user-select: text;
+
   }
 
   .activity-entry.error .error-content {
