@@ -153,9 +153,6 @@ export class Template extends LitElement implements AppTemplate {
   @query('bb-board-conversation')
   accessor boardConversation!: BoardConversation;
 
-  #resizeObserver? : ResizeObserver;
-
-
   #allowedMimeTypes: string | null = null;
 
   get additionalOptions() {
@@ -274,6 +271,7 @@ export class Template extends LitElement implements AppTemplate {
             .showDebugControls=${false}
             .nextNodeId=${nextNodeId}
             .waitingMessage=${""}
+            .scrollHeight=${this.conversationScroller?.clientHeight ?? 0}
             .loadingMessage=${this.#getLoadingMessage()}
             name=${Strings.from("LABEL_PROJECT")}
           ></bb-board-conversation>
@@ -488,49 +486,23 @@ export class Template extends LitElement implements AppTemplate {
 
 
 // Right now, it's the same as scroll to the bottom.
-#scrollToLatestUserQuery(behavior: ScrollBehavior = 'smooth') {
+#scrollToLatestUserQuery(height: number, behavior: ScrollBehavior = 'smooth') {
   const calculatedTop =  this.conversationScroller.scrollHeight -
-      this.#getLastTurnHeight() - 10;
+  height - 10;
+  console.log('scrolling!!!', calculatedTop);
   this.conversationScroller?.scrollTo({
     top: calculatedTop,
     behavior,
   });
 }
 
-#getLastTurnHeight() {
-  return this.renderRoot.querySelector('.turn.last')?.clientHeight ?? 0;
-}
 
-#getLastUserInputHeight() {
-  const nodes = this.renderRoot.querySelectorAll('.user-output');
-  if (!!nodes && nodes.length > 0) {
-    const lastNode = nodes.item(nodes.length - 1);
-    console.log('user output clientHeight', lastNode.clientHeight);
-    let nextSibling = lastNode.nextElementSibling;
-    while(nextSibling) {
-      console.log(nextSibling.tagName);
-    }
-    return lastNode.clientHeight;
-  }
-  return  0;
-}
 
 #getLoadingMessage () {
-  if (this.topGraphResult.status === 'running') {
+  if (this.topGraphResult?.status === 'running') {
     return this.topGraphResult?.currentNode?.descriptor?.metadata?.title ?? '';
   }
   return ''
-}
-
-#calculateChatHeightAndPropagateItToConversation() {
-  if (!this.conversationScroller) return;
-  const height = this.conversationScroller.clientHeight;
-  const introductionHeight = this.renderRoot.querySelector('.introduction')?.clientHeight ?? 0;
-  const userInputHeight = this.#getLastUserInputHeight();
-  this.conversationScroller.style.setProperty(
-    '--conversation-client-height',
-    `${height - (userInputHeight === 0? introductionHeight : userInputHeight) - 40 - /* small padding to avoid parasitic scrollbar */ 3}px`,
-  );
 }
 
 #disableTyping() {
@@ -632,11 +604,14 @@ export class Template extends LitElement implements AppTemplate {
       this.dispatchEvent(
         new InputEnterEvent(id, inputValues, /* allowSavingIfSecret */ true)
       );
+      let height = 0;
+    
+
       setTimeout(() => {
-        if (this.boardConversation) {
-          this.boardConversation.getLastUserInputHeight();
-        }
-          this.#scrollToLatestUserQuery();
+        // if (this.boardConversation) {
+        //   height = this.boardConversation.setLastUserInputHeight(this.conversationScroller.clientHeight);
+        // }
+          this.#scrollToLatestUserQuery(height);
         }, 
         100
       );
@@ -1139,18 +1114,6 @@ export class Template extends LitElement implements AppTemplate {
     if (skipStart === 'true' && this.state === "anonymous" || this.state === "valid") {
       this.dispatchEvent(new RunEvent());
     }
-  }
-
-  updated() {
-    this.#calculateChatHeightAndPropagateItToConversation();
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.#resizeObserver = new ResizeObserver(() => {
-      this.#calculateChatHeightAndPropagateItToConversation();
-    })
-    this.#resizeObserver.observe(this);
   }
 }
 

@@ -102,6 +102,12 @@ export class BoardConversation extends LitElement {
   #serializedRun: SerializedRun | null = null;
   #serializedRunUrl: string | null = null;
 
+  #resizeObserver = new ResizeObserver(() => {
+    console.log('resizing!');
+
+
+  })
+
   #observer = new IntersectionObserver((entries) => {
     if (entries.length === 0) {
       return;
@@ -120,10 +126,10 @@ export class BoardConversation extends LitElement {
       this.#newestEntry.value &&
       this.#newestEntry.value.querySelector(".user-required")
     ) {
-      this.#newestEntry.value.scrollIntoView({
-        block: "nearest",
-        inline: "start",
-      });
+      // this.#newestEntry.value.scrollIntoView({
+      //   block: "nearest",
+      //   inline: "start",
+      // });
       this.#newestEntry.value
         .querySelector(".user-required")
         ?.addEventListener("animationend", (evt: Event) => {
@@ -135,6 +141,7 @@ export class BoardConversation extends LitElement {
         });
     }
   });
+
 
   static styles = [icons, activityLogStyles];
 
@@ -155,9 +162,12 @@ export class BoardConversation extends LitElement {
       this.dispatchEvent(new InputRequestedEvent());
     }
 
-    this.#newestEntry.value.scrollIntoView({
-      block: "nearest",
-      inline: "start",
+    // this.#newestEntry.value.scrollIntoView({
+    //   block: "nearest",
+    //   inline: "start",
+    // });
+    setTimeout(() => {
+      this.setLastUserInputHeight(this.scrollHeight);
     });
   }
 
@@ -490,20 +500,25 @@ export class BoardConversation extends LitElement {
     </div>`;
   }
 
-  public getLastUserInputHeight() {
-    console.log('get user input height');
+  public setLastUserInputHeight(scrollHeight: number) {
+    console.log('scrollHeight', scrollHeight);
     const nodes = this.renderRoot.querySelectorAll('.user-output');
     if (!!nodes && nodes.length > 0) {
       const lastNode = nodes.item(nodes.length - 1);
       console.log('user output clientHeight', lastNode.clientHeight);
       let nextSibling = lastNode.nextElementSibling;
-      let heightSum = 0;
+      let heightSum = lastNode.clientHeight;
+      let lastHeight = 0;
       while(nextSibling) {
         heightSum += nextSibling.clientHeight;
         console.log('next', nextSibling.tagName);
         console.log('sum', heightSum);
+        lastHeight = nextSibling.clientHeight;
         nextSibling = nextSibling.nextElementSibling;
       }
+      const calculatedHeight = scrollHeight - heightSum + lastHeight;
+      console.log('calculatedHeight', calculatedHeight);
+      this.style.setProperty('--min-last-activity-height', `${calculatedHeight}px`);
       return lastNode.clientHeight;
     }
     return  0;
@@ -656,9 +671,11 @@ export class BoardConversation extends LitElement {
         ? nothing
         : html`<div id="click-run">${this.waitingMessage}</div>`;
     const loader = !!this.loadingMessage? html `
-             <generating-loader
-                .currentText=${this.loadingMessage}
-              ></generating-loader>
+                <section class="activity-entry">
+                      <generating-loader
+                        .currentText=${this.loadingMessage}
+                      ></generating-loader>
+                </section>
               `: nothing;
 
     const events =
