@@ -58,7 +58,7 @@ import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { LLMContent, NodeValue, OutputValues } from "@breadboard-ai/types";
 import { isLLMContentArrayBehavior, isLLMContentBehavior } from "../../utils";
 import { extractError } from "../shared/utils/utils";
-import { AssetShelf } from "../../elements/elements";
+import { AssetShelf, BoardConversation } from "../../elements/elements";
 import { SigninState } from "../../utils/signin-adapter";
 
 /** Included so the app can be standalone */
@@ -149,6 +149,9 @@ export class Template extends LitElement implements AppTemplate {
 
   @queryAll('.question-wrapper')
   accessor userInputs!: NodeList;
+
+  @query('bb-board-conversation')
+  accessor boardConversation!: BoardConversation;
 
   #resizeObserver? : ResizeObserver;
 
@@ -271,6 +274,7 @@ export class Template extends LitElement implements AppTemplate {
             .showDebugControls=${false}
             .nextNodeId=${nextNodeId}
             .waitingMessage=${""}
+            .loadingMessage=${this.#getLoadingMessage()}
             name=${Strings.from("LABEL_PROJECT")}
           ></bb-board-conversation>
         </div>
@@ -408,21 +412,12 @@ export class Template extends LitElement implements AppTemplate {
     return { role: "user", parts: [{ text }] };
   }
 
-  #renderLog(topGraphResult: TopGraphRunResult) {
+  #renderLog() {
     return html`
     <div class="conversations">
       <div class="conversations-content">
         ${this.#renderIntro()}
         ${this.#renderFullConversation()} 
-        ${topGraphResult.status === 'running'
-          ? html`
-          <div class="turn last loader">
-            <generating-loader
-                .currentText=${topGraphResult.currentNode?.descriptor?.metadata?.title}
-              ></generating-loader>
-          </div>
-              `
-          : nothing}
       </div>
     </div>
     `
@@ -507,12 +502,24 @@ export class Template extends LitElement implements AppTemplate {
 }
 
 #getLastUserInputHeight() {
-  const nodes = this.renderRoot.querySelectorAll('.question-block');
+  const nodes = this.renderRoot.querySelectorAll('.user-output');
   if (!!nodes && nodes.length > 0) {
     const lastNode = nodes.item(nodes.length - 1);
+    console.log('user output clientHeight', lastNode.clientHeight);
+    let nextSibling = lastNode.nextElementSibling;
+    while(nextSibling) {
+      console.log(nextSibling.tagName);
+    }
     return lastNode.clientHeight;
   }
   return  0;
+}
+
+#getLoadingMessage () {
+  if (this.topGraphResult.status === 'running') {
+    return this.topGraphResult?.currentNode?.descriptor?.metadata?.title ?? '';
+  }
+  return ''
 }
 
 #calculateChatHeightAndPropagateItToConversation() {
@@ -528,7 +535,6 @@ export class Template extends LitElement implements AppTemplate {
 
 #disableTyping() {
   const topGraphResult = this.topGraphResult;
-  console.log(topGraphResult);
   if (!!topGraphResult && topGraphResult.status === "stopped" && topGraphResult.log.length > 0) {
     console.log('Ended now. Disable typing. ');
     return true;
@@ -627,6 +633,9 @@ export class Template extends LitElement implements AppTemplate {
         new InputEnterEvent(id, inputValues, /* allowSavingIfSecret */ true)
       );
       setTimeout(() => {
+        if (this.boardConversation) {
+          this.boardConversation.getLastUserInputHeight();
+        }
           this.#scrollToLatestUserQuery();
         }, 
         100
@@ -886,7 +895,7 @@ export class Template extends LitElement implements AppTemplate {
     let active = true;
     // TODO: figure out what we should do for these secrets and remove display:none.
     return html`
-      <div class="user-input">
+      <div class="user-input" style="display:none;">
         <p class="api-message">
           When calling an API, the API provider's applicable privacy policy
           and terms apply
@@ -1096,7 +1105,7 @@ export class Template extends LitElement implements AppTemplate {
     this.#totalNodeCount === 0
       ? splashScreen
       : [
-          this.#renderLog(this.topGraphResult),
+          this.#renderLog(),
           this.#renderInput(this.topGraphResult),
           addAssetModal,
         ]}`;

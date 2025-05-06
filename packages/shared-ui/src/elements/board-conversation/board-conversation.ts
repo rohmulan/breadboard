@@ -46,6 +46,7 @@ import {
   isLLMContentArrayBehavior,
   isLLMContentBehavior,
 } from "../../utils/behaviors.js";
+import "../../app-templates/basic/generating-loader/generating-loader.js";
 
 @customElement("bb-board-conversation")
 export class BoardConversation extends LitElement {
@@ -84,6 +85,12 @@ export class BoardConversation extends LitElement {
 
   @property()
   accessor nextNodeId: string | null = null;
+
+  @property()
+  accessor scrollHeight: number = 0;
+
+  @property()
+  accessor loadingMessage: string = '';
 
   @state()
   accessor downloadStatus: "initial" | "generating" | "ready" = "initial";
@@ -483,6 +490,25 @@ export class BoardConversation extends LitElement {
     </div>`;
   }
 
+  public getLastUserInputHeight() {
+    console.log('get user input height');
+    const nodes = this.renderRoot.querySelectorAll('.user-output');
+    if (!!nodes && nodes.length > 0) {
+      const lastNode = nodes.item(nodes.length - 1);
+      console.log('user output clientHeight', lastNode.clientHeight);
+      let nextSibling = lastNode.nextElementSibling;
+      let heightSum = 0;
+      while(nextSibling) {
+        heightSum += nextSibling.clientHeight;
+        console.log('next', nextSibling.tagName);
+        console.log('sum', heightSum);
+        nextSibling = nextSibling.nextElementSibling;
+      }
+      return lastNode.clientHeight;
+    }
+    return  0;
+  }
+
   async #renderNodeOutputs(
     event: InspectableRunNodeEvent,
 
@@ -629,6 +655,11 @@ export class BoardConversation extends LitElement {
       this.events && this.events.length
         ? nothing
         : html`<div id="click-run">${this.waitingMessage}</div>`;
+    const loader = !!this.loadingMessage? html `
+             <generating-loader
+                .currentText=${this.loadingMessage}
+              ></generating-loader>
+              `: nothing;
 
     const events =
       this.events && this.events.length
@@ -737,6 +768,7 @@ export class BoardConversation extends LitElement {
                     running: event.type === "node" && event.end === null,
                     new: isNew,
                     [event.type]: true,
+                    isNewest: isNewestEntry,
                   };
 
                   if (event.type === "node") {
@@ -798,6 +830,6 @@ export class BoardConversation extends LitElement {
           `
         : nothing;
 
-    return [waitingMessage, events];
+    return [waitingMessage, events, loader];
   }
 }
