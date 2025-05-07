@@ -13,6 +13,9 @@ body.hide-cursor {
 }
 
 :root {
+  --bb-sys-color-primary: #0b57d0; /* the primary button color in Agentspace */
+  --bb-sys-color-text-on-primary: #ffffff;
+  
   --bb-grid-size: 4px;
   --bb-grid-size-2: calc(var(--bb-grid-size) * 2);
   --bb-grid-size-3: calc(var(--bb-grid-size) * 3);

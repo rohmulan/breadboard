@@ -209,12 +209,10 @@ export default  css`
         font: 500 var(--font-style, normal) var(--bb-title-large) /
           var(--bb-title-line-height-large)
           var(--font-family, var(--bb-font-family));
-        color: var(--primary-color, var(--bb-neutral-900));
         margin: 0 0 var(--bb-grid-size) 0;
       }
 
       & p {
-        color: var(--text-color, var(--bb-neutral-700));
         margin: 0 0 var(--bb-grid-size-2) 0;
       }
     }
@@ -247,7 +245,6 @@ export default  css`
         background: var(--background-color, none);
         border-radius: var(--bb-grid-size-2);
         font: 500 var(--font-style) 32px / 42px var(--font-family);
-        color: var(--primary-color, var(--bb-neutral-700));
         margin: 0 0 var(--bb-grid-size-3);
         flex: 0 0 auto;
         max-width: 80%;
@@ -259,12 +256,23 @@ export default  css`
         flex: 0 0 auto;
         font: 400 var(--font-style) var(--bb-body-large) /
           var(--bb-body-line-height-large) var(--font-family);
-        color: var(--secondary-color, var(--bb-neutral-700));
         margin: 0 0 var(--bb-grid-size-3);
 
         max-width: 65%;
         width: max-content;
         text-align: center;
+      }
+
+      #avatar {
+        border-radius: 100px;
+        height: 80px;
+        width: 80px;
+        background-color: var(--bb-ui-50);
+        text-transform: uppercase;
+        font-size: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     }
 
@@ -495,14 +503,13 @@ export default  css`
       & #run {
         min-width: 76px;
         height: var(--bb-grid-size-10);
-        background: var(--primary-color, var(--bb-ui-50))
-          var(--bb-icon-generative) 12px center / 16px 16px no-repeat;
-        color: var(--primary-text-color, var(--bb-ui-700));
+        background: var(--bb-sys-color-primary);
+        color: var(--bb-sys-color-text-on-primary, var(--bb-ui-700));
         border-radius: 20px;
-        border: 1px solid var(--primary-color, var(--bb-ui-100));
+        border: 1px solid var(--bb-sys-color-primary, var(--bb-ui-100));
         font: 400 var(--bb-label-large) /
           var(--bb-label-line-height-large) var(--bb-font-family);
-        padding: 0 var(--bb-grid-size-5) 0 var(--bb-grid-size-9);
+        padding: 0 var(--bb-grid-size-5) 0 var(--bb-grid-size-5);
         opacity: 0.85;
 
         --transition-properties: opacity;
@@ -524,7 +531,7 @@ export default  css`
       }
 
       & #sign-in {
-        background-image: var(--bb-icon-login-inverted);
+        /* background-image: var(--bb-icon-login-inverted); */
       }
 
       &.stopped {

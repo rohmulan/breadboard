@@ -975,6 +975,7 @@ export class Template extends LitElement implements AppTemplate {
           this.hasRenderedSplash = true;
         }}
       >
+        <div id="avatar">${this.options.title?.charAt(0) ?? 'A'}</div>
         <h1
           ?contenteditable=${!this.readOnly}
           @blur=${(evt: Event) => {
@@ -1031,15 +1032,15 @@ export class Template extends LitElement implements AppTemplate {
       <div id="input" class="stopped">
         <div>
           ${this.state === "anonymous" || this.state === "valid"
-            ? html`<md-filled-button
+            ? html`<button
                 id="run"
                 ?disabled=${this.#totalNodeCount === 0}
                 @click=${() => {
                   this.dispatchEvent(new RunEvent());
                 }}
               >
-                Start
-              </md-filled-button>`
+                Get Started
+              </button>`
             : html`<button
                 id="sign-in"
                 ?disabled=${this.#totalNodeCount === 0}
