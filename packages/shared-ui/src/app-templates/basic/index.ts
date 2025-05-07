@@ -58,7 +58,7 @@ import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { LLMContent, NodeValue, OutputValues } from "@breadboard-ai/types";
 import { isLLMContentArrayBehavior, isLLMContentBehavior } from "../../utils";
 import { extractError } from "../shared/utils/utils";
-import { AssetShelf } from "../../elements/elements";
+import { AssetShelf, BoardConversation } from "../../elements/elements";
 import { SigninState } from "../../utils/signin-adapter";
 
 /** Included so the app can be standalone */
@@ -150,8 +150,8 @@ export class Template extends LitElement implements AppTemplate {
   @queryAll('.question-wrapper')
   accessor userInputs!: NodeList;
 
-  #resizeObserver? : ResizeObserver;
-
+  @query('bb-board-conversation')
+  accessor boardConversation!: BoardConversation;
 
   #allowedMimeTypes: string | null = null;
 
@@ -271,6 +271,8 @@ export class Template extends LitElement implements AppTemplate {
             .showDebugControls=${false}
             .nextNodeId=${nextNodeId}
             .waitingMessage=${""}
+            .scrollHeight=${this.conversationScroller?.clientHeight ?? 0}
+            .loadingMessage=${this.#getLoadingMessage()}
             name=${Strings.from("LABEL_PROJECT")}
           ></bb-board-conversation>
         </div>
@@ -408,21 +410,12 @@ export class Template extends LitElement implements AppTemplate {
     return { role: "user", parts: [{ text }] };
   }
 
-  #renderLog(topGraphResult: TopGraphRunResult) {
+  #renderLog() {
     return html`
     <div class="conversations">
       <div class="conversations-content">
         ${this.#renderIntro()}
         ${this.#renderFullConversation()} 
-        ${topGraphResult.status === 'running'
-          ? html`
-          <div class="turn last loader">
-            <generating-loader
-                .currentText=${topGraphResult.currentNode?.descriptor?.metadata?.title}
-              ></generating-loader>
-          </div>
-              `
-          : nothing}
       </div>
     </div>
     `
@@ -493,42 +486,27 @@ export class Template extends LitElement implements AppTemplate {
 
 
 // Right now, it's the same as scroll to the bottom.
-#scrollToLatestUserQuery(behavior: ScrollBehavior = 'smooth') {
+#scrollToLatestUserQuery(height: number, behavior: ScrollBehavior = 'smooth') {
   const calculatedTop =  this.conversationScroller.scrollHeight -
-      this.#getLastTurnHeight() - 10;
+  height - 10;
+  console.log('scrolling!!!', calculatedTop);
   this.conversationScroller?.scrollTo({
     top: calculatedTop,
     behavior,
   });
 }
 
-#getLastTurnHeight() {
-  return this.renderRoot.querySelector('.turn.last')?.clientHeight ?? 0;
-}
 
-#getLastUserInputHeight() {
-  const nodes = this.renderRoot.querySelectorAll('.question-block');
-  if (!!nodes && nodes.length > 0) {
-    const lastNode = nodes.item(nodes.length - 1);
-    return lastNode.clientHeight;
+
+#getLoadingMessage () {
+  if (this.topGraphResult?.status === 'running') {
+    return this.topGraphResult?.currentNode?.descriptor?.metadata?.title ?? '';
   }
-  return  0;
-}
-
-#calculateChatHeightAndPropagateItToConversation() {
-  if (!this.conversationScroller) return;
-  const height = this.conversationScroller.clientHeight;
-  const introductionHeight = this.renderRoot.querySelector('.introduction')?.clientHeight ?? 0;
-  const userInputHeight = this.#getLastUserInputHeight();
-  this.conversationScroller.style.setProperty(
-    '--conversation-client-height',
-    `${height - (userInputHeight === 0? introductionHeight : userInputHeight) - 40 - /* small padding to avoid parasitic scrollbar */ 3}px`,
-  );
+  return ''
 }
 
 #disableTyping() {
   const topGraphResult = this.topGraphResult;
-  console.log(topGraphResult);
   if (!!topGraphResult && topGraphResult.status === "stopped" && topGraphResult.log.length > 0) {
     console.log('Ended now. Disable typing. ');
     return true;
@@ -626,8 +604,14 @@ export class Template extends LitElement implements AppTemplate {
       this.dispatchEvent(
         new InputEnterEvent(id, inputValues, /* allowSavingIfSecret */ true)
       );
+      let height = 0;
+    
+
       setTimeout(() => {
-          this.#scrollToLatestUserQuery();
+        // if (this.boardConversation) {
+        //   height = this.boardConversation.setLastUserInputHeight(this.conversationScroller.clientHeight);
+        // }
+          this.#scrollToLatestUserQuery(height);
         }, 
         100
       );
@@ -886,7 +870,7 @@ export class Template extends LitElement implements AppTemplate {
     let active = true;
     // TODO: figure out what we should do for these secrets and remove display:none.
     return html`
-      <div class="user-input">
+      <div class="user-input" style="display:none;">
         <p class="api-message">
           When calling an API, the API provider's applicable privacy policy
           and terms apply
@@ -1096,7 +1080,7 @@ export class Template extends LitElement implements AppTemplate {
     this.#totalNodeCount === 0
       ? splashScreen
       : [
-          this.#renderLog(this.topGraphResult),
+          this.#renderLog(),
           this.#renderInput(this.topGraphResult),
           addAssetModal,
         ]}`;
@@ -1130,18 +1114,6 @@ export class Template extends LitElement implements AppTemplate {
     if (skipStart === 'true' && this.state === "anonymous" || this.state === "valid") {
       this.dispatchEvent(new RunEvent());
     }
-  }
-
-  updated() {
-    this.#calculateChatHeightAndPropagateItToConversation();
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.#resizeObserver = new ResizeObserver(() => {
-      this.#calculateChatHeightAndPropagateItToConversation();
-    })
-    this.#resizeObserver.observe(this);
   }
 }
 

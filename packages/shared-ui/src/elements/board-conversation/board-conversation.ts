@@ -46,6 +46,7 @@ import {
   isLLMContentArrayBehavior,
   isLLMContentBehavior,
 } from "../../utils/behaviors.js";
+import "../../app-templates/basic/generating-loader/generating-loader.js";
 
 @customElement("bb-board-conversation")
 export class BoardConversation extends LitElement {
@@ -85,6 +86,12 @@ export class BoardConversation extends LitElement {
   @property()
   accessor nextNodeId: string | null = null;
 
+  @property()
+  accessor scrollHeight: number = 0;
+
+  @property()
+  accessor loadingMessage: string = '';
+
   @state()
   accessor downloadStatus: "initial" | "generating" | "ready" = "initial";
 
@@ -94,6 +101,12 @@ export class BoardConversation extends LitElement {
   #isHidden = false;
   #serializedRun: SerializedRun | null = null;
   #serializedRunUrl: string | null = null;
+
+  #resizeObserver = new ResizeObserver(() => {
+    console.log('resizing!');
+
+
+  })
 
   #observer = new IntersectionObserver((entries) => {
     if (entries.length === 0) {
@@ -113,10 +126,10 @@ export class BoardConversation extends LitElement {
       this.#newestEntry.value &&
       this.#newestEntry.value.querySelector(".user-required")
     ) {
-      this.#newestEntry.value.scrollIntoView({
-        block: "nearest",
-        inline: "start",
-      });
+      // this.#newestEntry.value.scrollIntoView({
+      //   block: "nearest",
+      //   inline: "start",
+      // });
       this.#newestEntry.value
         .querySelector(".user-required")
         ?.addEventListener("animationend", (evt: Event) => {
@@ -128,6 +141,7 @@ export class BoardConversation extends LitElement {
         });
     }
   });
+
 
   static styles = [icons, activityLogStyles];
 
@@ -148,9 +162,12 @@ export class BoardConversation extends LitElement {
       this.dispatchEvent(new InputRequestedEvent());
     }
 
-    this.#newestEntry.value.scrollIntoView({
-      block: "nearest",
-      inline: "start",
+    // this.#newestEntry.value.scrollIntoView({
+    //   block: "nearest",
+    //   inline: "start",
+    // });
+    setTimeout(() => {
+      this.setLastUserInputHeight(this.scrollHeight);
     });
   }
 
@@ -483,6 +500,30 @@ export class BoardConversation extends LitElement {
     </div>`;
   }
 
+  public setLastUserInputHeight(scrollHeight: number) {
+    console.log('scrollHeight', scrollHeight);
+    const nodes = this.renderRoot.querySelectorAll('.user-output');
+    if (!!nodes && nodes.length > 0) {
+      const lastNode = nodes.item(nodes.length - 1);
+      console.log('user output clientHeight', lastNode.clientHeight);
+      let nextSibling = lastNode.nextElementSibling;
+      let heightSum = lastNode.clientHeight;
+      let lastHeight = 0;
+      while(nextSibling) {
+        heightSum += nextSibling.clientHeight;
+        console.log('next', nextSibling.tagName);
+        console.log('sum', heightSum);
+        lastHeight = nextSibling.clientHeight;
+        nextSibling = nextSibling.nextElementSibling;
+      }
+      const calculatedHeight = scrollHeight - heightSum + lastHeight;
+      console.log('calculatedHeight', calculatedHeight);
+      this.style.setProperty('--min-last-activity-height', `${calculatedHeight}px`);
+      return lastNode.clientHeight;
+    }
+    return  0;
+  }
+
   async #renderNodeOutputs(
     event: InspectableRunNodeEvent,
 
@@ -561,7 +602,7 @@ export class BoardConversation extends LitElement {
         } else {
           renderableValue = html`${nodeValue !== undefined
             ? nodeValue
-            : html`<span class="no-value">[No value provided]</span>`}`;
+            : nothing}`;
         }
 
         // prettier-ignore
@@ -629,6 +670,13 @@ export class BoardConversation extends LitElement {
       this.events && this.events.length
         ? nothing
         : html`<div id="click-run">${this.waitingMessage}</div>`;
+    const loader = !!this.loadingMessage? html `
+                <section class="activity-entry">
+                      <generating-loader
+                        .currentText=${this.loadingMessage}
+                      ></generating-loader>
+                </section>
+              `: nothing;
 
     const events =
       this.events && this.events.length
@@ -710,8 +758,22 @@ export class BoardConversation extends LitElement {
                   }
 
                   case "error": {
-                    const output = formatError(event.error);
-                    content = html`<div class="error-content">${output}</div>`;
+                    let output = formatError(event.error);
+                    
+                    if(output == "[object Object]") {
+                      output = "Something went wrong."
+                    }
+                    console.log({event, output});
+
+                    content = html`
+                            <div class="flow">
+                                <div class="label-container">
+                                <div class="label">
+                                  ${output}
+                                </div>
+                                </div>
+                            </div>
+                    `;
                     break;
                   }
 
@@ -737,6 +799,7 @@ export class BoardConversation extends LitElement {
                     running: event.type === "node" && event.end === null,
                     new: isNew,
                     [event.type]: true,
+                    isNewest: isNewestEntry,
                   };
 
                   if (event.type === "node") {
@@ -798,6 +861,6 @@ export class BoardConversation extends LitElement {
           `
         : nothing;
 
-    return [waitingMessage, events];
+    return [waitingMessage, events, loader];
   }
 }

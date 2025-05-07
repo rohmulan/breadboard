@@ -35,7 +35,7 @@ export const styles = css`
 
   :host([dark-theme]) {
   --color-bubble-wrapper: #282a2c
-}
+  }
 
   #click-run {
     font: 400 var(--bb-body-large) / var(--bb-body-line-height-large)
@@ -180,6 +180,10 @@ export const styles = css`
 
   .activity-entry .node-info details span {
     line-height: var(--bb-grid-size-5);
+  }
+
+  .activity-entry:last-of-type {
+    min-height: var(--min-last-activity-height, 0);
   }
 
   .activity-entry {
@@ -460,8 +464,7 @@ export const styles = css`
   }
 
   .activity-entry.error {
-    color: #cc0000;
-    user-select: text;
+
   }
 
   .activity-entry.error .error-content {
