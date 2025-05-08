@@ -985,10 +985,18 @@ export class Template extends LitElement implements AppTemplate {
       styles["--secondary-color"] = this.options.theme.secondaryColor;
       styles["--text-color"] = this.options.theme.textColor;
       styles["--background-color"] = this.options.theme.backgroundColor;
-    }
+      styles["--background-color-secondary"] = this.options.theme.secondaryBackgroundColor;
+      styles["--primary-button-color"] = this.options.theme.primaryButtonColor;
+      styles["--primary-button-color-text"] = this.options.theme.primaryButtonColorText;
+      styles["--bubble-background-color"] = this.options.theme.bubbleBackgroundColor;
+      styles["--secondary-button-color"] = this.options.theme.secondaryButtonColor;
+      styles["--secondary-button-color-text"] = this.options.theme.secondaryButtonColorText;
+      styles["--primary-border-color"] = this.options.theme.primaryBorderColor;
 
-    if (typeof this.options.splashImage === "string") {
-      styles["--splash-image"] = this.options.splashImage;
+
+
+
+
     }
 
     if (

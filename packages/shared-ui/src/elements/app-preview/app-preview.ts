@@ -33,8 +33,31 @@ import { classMap } from "lit/directives/class-map.js";
 const primaryColor = getGlobalColor("--bb-ui-700");
 const secondaryColor = getGlobalColor("--bb-ui-400");
 const backgroundColor = getGlobalColor("--bb-neutral-0");
+const secondaryBackgroundColor = "#d3e3fd";
 const textColor = getGlobalColor("--bb-neutral-900");
 const primaryTextColor = getGlobalColor("--bb-neutral-0");
+const primaryButtonColor = getGlobalColor("--bb-sys-color-primary");
+const primaryButtonColorText = getGlobalColor("--bb-neutral-0");
+
+const bubbleBackgroundColor = "#e9eef6";
+
+
+
+
+
+const primaryColorDark = getGlobalColor("--bb-ui-300");
+const secondaryColorDark = getGlobalColor("--bb-ui-600");
+const backgroundColorDark = getGlobalColor("--bb-neutral-900");
+const textColorDark = getGlobalColor("--bb-neutral-0");
+const primaryTextColorDark = getGlobalColor("--bb-neutral-900");
+const secondaryBackgroundColorDark = getGlobalColor("--bb-ui-800");
+const primaryButtonColorDark = getGlobalColor("--bb-ui-300");
+const primaryButtonColorTextDark = getGlobalColor("--bb-neutral-900");
+const bubbleBackgroundColorDark = "red";
+
+
+
+
 
 /**
  * Based on https://www.w3.org/TR/AERT/#color-contrast
@@ -132,6 +155,13 @@ export class AppPreview extends LitElement {
       backgroundColor: backgroundColor,
       textColor: textColor,
       primaryTextColor: primaryTextColor,
+      secondaryBackgroundColor: secondaryBackgroundColor,
+      primaryButtonColor: primaryButtonColor,
+      primaryButtonColorText: primaryButtonColorText,
+      bubbleBackgroundColor: bubbleBackgroundColor,
+      secondaryButtonColor:"#f8fafd",
+      secondaryButtonColorText: "#747775",
+      primaryBorderColor: "rgb(11, 87, 208)",
       splashScreen: {
         storedData: {
           handle: "/images/app/generic-flow.jpg",
@@ -140,6 +170,30 @@ export class AppPreview extends LitElement {
       },
     };
   }
+
+  #createDarkTheme(): AppTheme {
+    return {
+      primaryColor: primaryColorDark,
+      secondaryColor: secondaryColorDark,
+      backgroundColor: backgroundColorDark,
+      textColor: textColorDark,
+      primaryTextColor: primaryTextColorDark,
+      secondaryBackgroundColor: secondaryBackgroundColorDark,
+      primaryButtonColor: primaryButtonColorDark,
+      primaryButtonColorText: primaryButtonColorTextDark,
+      bubbleBackgroundColor: bubbleBackgroundColorDark,
+      secondaryButtonColor:"#333537",
+      secondaryButtonColorText: "#8e918f",
+      primaryBorderColor: "rgb(11, 87, 208)",
+      splashScreen: {
+        storedData: {
+          handle: "/images/app/generic-flow.jpg",
+          mimeType: "image/jpeg",
+        },
+      },
+    };
+  }
+
 
   #splashImage = new Map<string, string>();
   #applyThemeToTemplate() {
@@ -332,64 +386,14 @@ export class AppPreview extends LitElement {
       this.appDescription = this.graph?.description ?? "";
     };
 
+    const setDarkTheme = () => {
+      this.theme = this.#createDarkTheme();
+      this.appTitle = this.graph?.title ?? Strings.from("LABEL_UNTITLED_APP");
+      this.appDescription = this.graph?.description ?? "";
+    };
+
     if (changedProperties.has("graph") || changedProperties.has("themeHash")) {
-      if (this.graph?.metadata?.visual?.presentation) {
-        if (
-          this.graph?.metadata?.visual?.presentation?.theme &&
-          this.graph?.metadata?.visual?.presentation?.themes
-        ) {
-          const { themes, theme } = this.graph.metadata.visual.presentation;
-          if (themes[theme]) {
-            const themeColors = themes[theme]?.themeColors ?? {};
-
-            this.template = themes[theme].template ?? "basic";
-            this.theme = {
-              primaryColor: themeColors?.["primaryColor"] ?? primaryColor,
-              secondaryColor: themeColors?.["secondaryColor"] ?? secondaryColor,
-              backgroundColor:
-                themeColors?.["backgroundColor"] ?? backgroundColor,
-              textColor: themeColors?.["textColor"] ?? textColor,
-              primaryTextColor:
-                themeColors?.["primaryTextColor"] ?? primaryTextColor,
-            };
-
-            this.theme.splashScreen = themes[theme].splashScreen;
-          } else {
-            setDefaultTheme();
-          }
-        } else if (this.graph.metadata.visual.presentation.template) {
-          this.template =
-            this.graph.metadata.visual.presentation.template ?? "basic";
-
-          const theme = this.graph.metadata.visual.presentation.themeColors;
-          const splashScreen = this.graph.assets?.["@@splash"];
-
-          if (theme) {
-            this.theme = {
-              primaryColor: theme["primaryColor"] ?? primaryColor,
-              secondaryColor: theme["secondaryColor"] ?? secondaryColor,
-              backgroundColor: theme["backgroundColor"] ?? backgroundColor,
-              textColor: theme["textColor"] ?? textColor,
-              primaryTextColor: theme["primaryTextColor"] ?? primaryTextColor,
-            };
-
-            if (splashScreen) {
-              const splashScreenData = splashScreen.data as LLMContent[];
-              if (splashScreenData.length && splashScreenData[0].parts.length) {
-                const splash = splashScreenData[0].parts[0];
-                if (isInlineData(splash) || isStoredData(splash)) {
-                  this.theme.splashScreen = splash;
-                }
-              }
-            }
-          }
-        } else {
-          setDefaultTheme();
-        }
-      } else {
-        setDefaultTheme();
-      }
-
+      setDefaultTheme();
       this.#applyThemeToTemplate();
     }
 

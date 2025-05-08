@@ -5,19 +5,25 @@ export default  css`
   box-sizing: border-box;
 }
 
+.archinve {
+  --color-on-surface: white;
+  --color-background: #201f21;
+
+  --color-on-surface: black;
+  --color-background: white;
+
+
+
+}
 :host {
   display: block;
   width: 100%;
   height: 100%;
-  --color-on-surface: black;
-  --color-background: white;
-  --color-bubble-wrapper: #e9eef6
+
 }
 
 :host([dark-theme]) {
-  --color-on-surface: white;
-  --color-background: #201f21;
-  --color-bubble-wrapper: #282a2c
+
 }
 
 /** Fonts */
@@ -73,7 +79,7 @@ export default  css`
         min-height: 32px;
         display: inline-flex;
         align-items: center;
-        background: var(--color-bubble-wrapper);
+        background: var(--bubble-background-color);
         padding: 16px;
         border-radius: 26px 4px 26px 26px;
 
@@ -267,7 +273,9 @@ export default  css`
         border-radius: 100px;
         height: 80px;
         width: 80px;
-        background-color: var(--bb-ui-50);
+        background-color: var(--background-color-secondary);
+        background-color: var(--background-color-secondary);
+
         text-transform: uppercase;
         font-size: 40px;
         display: flex;
@@ -504,10 +512,10 @@ export default  css`
       & #run {
         min-width: 76px;
         height: var(--bb-grid-size-10);
-        background: var(--bb-sys-color-primary);
-        color: var(--bb-sys-color-text-on-primary, var(--bb-ui-700));
+        background: var(--primary-button-color);
+        color: var(--primary-button-color-text, var(--bb-ui-700));
         border-radius: 20px;
-        border: 1px solid var(--bb-sys-color-primary, var(--bb-ui-100));
+        border: 1px solid var(--primary-button-color, var(--bb-ui-100));
         font: 400 var(--bb-label-large) /
           var(--bb-label-line-height-large) var(--bb-font-family);
         padding: 0 var(--bb-grid-size-5) 0 var(--bb-grid-size-5);
@@ -562,7 +570,7 @@ export default  css`
           width: 100%;
           display: flex;
           flex-direction: column;
-          border: 1px solid #0b57d0;
+          border: 1px solid var(--primary-border-color);
           border-radius: 24px;
           
 
@@ -580,7 +588,7 @@ export default  css`
             flex: 1;
             overflow: auto;
        
-            color: black;
+            color: var(----primary-color);
 
             & p {
               display: flex;
@@ -602,7 +610,7 @@ export default  css`
               resize: none;
               background: transparent;
               padding: 8px 6px;
-              color: black;
+              color: var(----primary-color);
               font: 400 var(--bb-title-medium) /
                 var(--bb-title-line-height-medium) var(--bb-font-family);
               border: none;
@@ -646,8 +654,11 @@ export default  css`
             }
             & #continue {
               margin-left: var(--bb-grid-size-2);
-              background: #f8fafd var(--bb-icon-send) center center / 20px 20px no-repeat;
-              color: #747775;
+              background: var(--secondary-button-color) var(--bb-icon-send) center center / 20px 20px no-repeat;
+              color: var(--secondary-button-color-text);
+
+              
+
               width: 40px;
               height: 40px;
               font-size: 0;
@@ -678,8 +689,9 @@ export default  css`
           & .source-button {
               margin-left: var(--bb-grid-size-2);
               cursor: pointer;
-              background: #f8fafd;
-              color: rgb(116, 119, 117);
+              background: var(--secondary-button-color);
+              
+              color: var(--secondary-button-color-text);
               height: 40px;
               border: none;
               border-radius: 20px; /* pill shape for icon+text */
@@ -695,7 +707,7 @@ export default  css`
           & search-button .icon {
             width: 20px;
             height: 20px;
-            color: rgb(116, 119, 117)
+            color: var(--secondary-button-color-text);
           }
 
           & .search-button .text {

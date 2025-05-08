@@ -534,6 +534,13 @@ export interface AppThemeColors {
   backgroundColor: string;
   textColor: string;
   primaryTextColor: string;
+  secondaryBackgroundColor: string;
+  primaryButtonColor: string;
+  primaryButtonColorText: string;
+  bubbleBackgroundColor: string;
+  secondaryButtonColor:string,
+  secondaryButtonColorText: string,
+  primaryBorderColor: string;
 }
 
 export type AppTheme = AppThemeColors & {
