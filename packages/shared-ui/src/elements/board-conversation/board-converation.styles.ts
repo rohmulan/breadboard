@@ -128,6 +128,10 @@ export const styles = css`
           line-height: var(--body-large-line-height);
           font-weight: var(--body-large-weight);
           letter-spacing: var(--body-large-tracking);
+
+          .manual-input {
+            padding: 8px 0px;
+          }
         }
     }
 

@@ -539,11 +539,7 @@ export default  css`
         padding: var(--bb-grid-size-2) var(--bb-grid-size-3);
       }
 
-      &.paused,
-      &.finished,
-      &.running {
-        width: 100%;
-
+     
         .disclaimer{
           color: rgb(95, 99, 104);
           font-size: 12px;
@@ -704,16 +700,7 @@ export default  css`
           & .search-button .text {
             font-size: 14px;
           }
-
-          }
         }
-        &.active.paused #input-container {
-          transform: translateY(0);
-        }
-      }
-      
-      &.running {
-        // display: none;
       }
     }
   }

@@ -9,6 +9,13 @@ export type TextCapabilityPart = {
   text: string;
 };
 
+export type LLMOutput = {
+  outputContent?: string;
+  triggerFlow?: boolean;
+  triggerInput?: string;
+  error?: string;
+}
+
 export type GeminiSchema = {
   type: "string" | "number" | "integer" | "boolean" | "object" | "array";
   format?: string;
@@ -93,7 +100,7 @@ function endpointURL(model: string) {
 export async function gemini(
   userInput: string,
   boardDescription: string
-): Promise<void> {
+): Promise<LLMOutput> {
   console.log(
     "Start fetching from gemini API with userInput as %s and boardDescription as %s",
     userInput,
@@ -116,6 +123,7 @@ export async function gemini(
     console.error("Error fetching from Gemini API. Status:", data.status);
     const errorResponse = await data.json(); // Assuming error response is JSON
     console.error("Error details:", errorResponse);
+    return {error:errorResponse.toString()};
   } else {
     console.log("Complete fetching from gemini API, status:", data.status);
     // Maybe define a response data type GeminiOutput to parse the response?
@@ -123,6 +131,20 @@ export async function gemini(
     console.dir(res);
     console.log("Print candidate to see result...");
     console.dir(res.candidates[0].content.parts[0]);
+    const part = res.candidates[0].content.parts[0];
+    const functionCall = part.functionCall;
+    if (functionCall) {
+      return {
+        triggerFlow: true,
+        triggerInput: functionCall.args.flow_user_input?? '',
+      }
+    } else {
+      return {
+        outputContent: part.text?? '',
+        triggerFlow: false,
+      }
+    }
+    
   }
 }
 

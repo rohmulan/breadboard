@@ -78,6 +78,7 @@ import { map } from "lit/directives/map.js";
 import { markdown } from "../../directives/markdown";
 import "./text-streamer/text-streamer.js";
 import { BehaviorSubject, takeUntil, first} from "rxjs";
+import {ManualEvent, chat, generateUserInputEvent, generateLLMOutputEvent} from "./conversation-manager/conversation-manager.js";
 interface Turn {
   query?: string;
   reply? : TopGraphRunResult;
@@ -143,6 +144,18 @@ export class Template extends LitElement implements AppTemplate {
   @state()
   accessor showAddAssetModal = false;
   #addAssetType: string | null = null;
+
+  @state()
+  accessor eventsQueue: (InspectableRunEvent | ManualEvent)[] = [];
+
+  @state()
+  accessor conversationRendered = false;
+
+  @state()
+  accessor waitingLLMOutput = false;
+
+  @state()
+  accessor currentRunEvents: InspectableRunEvent[] = [];
 
   @query('.conversations')
   accessor conversationScroller!: HTMLElement;
@@ -250,7 +263,7 @@ export class Template extends LitElement implements AppTemplate {
 
   #renderFullConversation() {
       const run = this.run ?? null;
-      const events = run?.events ?? [];
+      const events = this.eventsQueue;
       const eventPosition = events.length - 1;
   
       const hideLast = this.status === STATUS.STOPPED;
@@ -502,6 +515,9 @@ export class Template extends LitElement implements AppTemplate {
   if (this.topGraphResult?.status === 'running') {
     return this.topGraphResult?.currentNode?.descriptor?.metadata?.title ?? '';
   }
+  if (this.waitingLLMOutput) {
+    return 'Generating...';
+  }
   return ''
 }
 
@@ -543,7 +559,13 @@ export class Template extends LitElement implements AppTemplate {
         return;
       }
 
-      let stringInput = "";
+      if (this.#checkIsEmpty()) {
+        return;
+      }
+
+      if (this.#flowIsNotStarted()) {
+        return this.#processMessage();
+      }
 
       const inputs = this.#inputRef.value.querySelectorAll<
         HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -604,91 +626,82 @@ export class Template extends LitElement implements AppTemplate {
       this.dispatchEvent(
         new InputEnterEvent(id, inputValues, /* allowSavingIfSecret */ true)
       );
-      let height = 0;
-    
-
-      setTimeout(() => {
-        // if (this.boardConversation) {
-        //   height = this.boardConversation.setLastUserInputHeight(this.conversationScroller.clientHeight);
-        // }
-          this.#scrollToLatestUserQuery(height);
-        }, 
-        100
-      );
+      this.#startScrolling();
     };
 
     let inputContents: HTMLTemplateResult | symbol = nothing;
     let active = false;
     let secretPart: HTMLTemplateResult | symbol = nothing;
     const currentItem = topGraphResult.log.at(-1);
+
+    const controls = html`<div class="controls">
+    <div class="action-group">
+        <bb-add-asset-button
+          .anchor=${"above"}
+          .useGlobalPosition=${false}
+          .showGDrive=${this.showGDrive}
+        ></bb-add-asset-button>
+        <button class="search-button">
+          <svg xmlns="http://www.w3.org/2000/svg" 
+          width="24" height="24" 
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="rgb(116, 119, 117)" 
+          stroke-width="1">
+            <path
+              d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95a15.65 15.65 0 00-1.38-3.56A8.03 8.03 0 0118.92 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.987 7.987 0 015.08 16zm2.95-8H5.08a7.987 7.987 0 014.33-3.56A15.65 15.65 0 008.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 01-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"
+            />
+          </svg>
+          <span class="text">Search</span>
+        </button>
+        <button class="source-button">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="rgb(116,119,117)">
+            <path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
+          </svg>
+          <span class="text">Sources</span>
+        </button>
+        </div>
+        <div class="action-group">
+          ${topGraphResult.status !== 'running' ? 
+            html`<button
+            id="continue"
+            @click=${() => {
+              continueRun(currentItem?.type === "edge" && currentItem.id? currentItem.id : "unknown");
+            }}
+          >
+            Continue
+          </button>`
+            : nothing}
+          ${topGraphResult.status === 'running'
+            ? html`
+            <button id="stop"
+            title="Stop execution"
+            @click=${() => {
+            this.dispatchEvent(new RunEvent());
+            }}>
+              <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24" height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="rgb(8, 66, 160)"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="6" y="6" width="12" height="12"/>
+            </svg>
+          </button>`
+            : nothing}
+          </div>
+        </div>`;
     if (currentItem?.type === "edge") {
       const props = Object.entries(currentItem.schema?.properties ?? {});
       if (this.run && this.run.events.at(-1)?.type === "secret") { 
         secretPart = this.#renderSecretInput();
       }
 
-      const controls = html`<div class="controls">
-      <div class="action-group">
-          <bb-add-asset-button
-            .anchor=${"above"}
-            .useGlobalPosition=${false}
-            .showGDrive=${this.showGDrive}
-          ></bb-add-asset-button>
-          <button class="search-button">
-            <svg xmlns="http://www.w3.org/2000/svg" 
-            width="24" height="24" 
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            fill="rgb(116, 119, 117)" 
-            stroke-width="1">
-              <path
-                d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95a15.65 15.65 0 00-1.38-3.56A8.03 8.03 0 0118.92 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.987 7.987 0 015.08 16zm2.95-8H5.08a7.987 7.987 0 014.33-3.56A15.65 15.65 0 008.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 01-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"
-              />
-            </svg>
-            <span class="text">Search</span>
-          </button>
-          <button class="source-button">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="rgb(116,119,117)">
-              <path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
-            </svg>
-            <span class="text">Sources</span>
-          </button>
-          </div>
-          <div class="action-group">
-            ${topGraphResult.status !== 'running' ? 
-              html`<button
-              id="continue"
-              ?disabled=${this.#checkIsEmpty()}
-              @click=${() => {
-                continueRun(currentItem.id ?? "unknown");
-              }}
-            >
-              Continue
-            </button>`
-              : nothing}
-            ${topGraphResult.status === 'running'
-              ? html`
-              <button id="stop"
-              title="Stop execution"
-              @click=${() => {
-              this.dispatchEvent(new RunEvent());
-              }}>
-                <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24" height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="rgb(8, 66, 160)"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect x="6" y="6" width="12" height="12"/>
-              </svg>
-            </button>`
-              : nothing}
-            </div>
-          </div>`;
+
         active = true;
         const valueIsDefined = currentItem.value !== undefined;
         const valueHasKeys =
@@ -775,7 +788,6 @@ export class Template extends LitElement implements AppTemplate {
         }
 
         inputContents = html`
-     
           ${secretPart}
           ${repeat(props.length > 0 ? props : [["", {}]], ([name, schema]) => {
             const dataType = isLLMContentArrayBehavior(schema)
@@ -801,13 +813,12 @@ export class Template extends LitElement implements AppTemplate {
                 type="text"
                 data-type=${dataType}
                 .value=${inputValue}
-                ?disabled=${this.#disableTyping()}
                 @keydown=${(e: KeyboardEvent) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    if (!this.#checkIsEmpty()) {
+                  
                       continueRun(currentItem.id ?? "unknown");
-                    }
+                    
                   }
                 }}
               ></textarea>
@@ -820,7 +831,30 @@ export class Template extends LitElement implements AppTemplate {
       //   active = true;
       //   inputContents = placeholder;
       // }
-    } else {
+    } else if (!topGraphResult || topGraphResult.status === 'stopped' || topGraphResult.log.length === 0) {
+      inputContents = html`<div class="user-input">
+      <textarea
+        placeholder= ${"Search content or ask questions"}
+        name="manual-input"
+        type="text"
+        data-type="string
+        .value=""
+        
+        @keydown=${(e: KeyboardEvent) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+           
+              continueRun("unknown");
+            
+          }
+        }}
+      ></textarea>
+      
+      </div>
+      ${controls}
+      `;
+    } 
+    else {
       inputContents = placeholder;
     }
 
@@ -851,10 +885,10 @@ export class Template extends LitElement implements AppTemplate {
         if (!(evt.key === "Enter" && isCtrlCommand)) {
           return;
         }
-        if (!this.#checkIsEmpty()) {
+       
 
           continueRun("unknown");
-        }
+        
       }}
       id="input"
       class=${classMap({ active, [status]: true })}
@@ -918,6 +952,11 @@ export class Template extends LitElement implements AppTemplate {
           this.#nodesLeftToVisit.delete(item.descriptor.id);
         }
       }
+      const incomingEvents = this.run?.events;
+      if (incomingEvents && incomingEvents.length > this.currentRunEvents.length) {
+        this.eventsQueue.push(...incomingEvents.slice(this.currentRunEvents.length));
+      }
+      this.currentRunEvents = incomingEvents?? [];
     }
   }
 
@@ -1036,7 +1075,7 @@ export class Template extends LitElement implements AppTemplate {
                 id="run"
                 ?disabled=${this.#totalNodeCount === 0}
                 @click=${() => {
-                  this.dispatchEvent(new RunEvent());
+                  this.#renderRuntime();
                 }}
               >
                 Get Started
@@ -1073,12 +1112,8 @@ export class Template extends LitElement implements AppTemplate {
       ></bb-add-asset-modal>`;
     }
 
-    let content: HTMLTemplateResult | symbol = html`${(styles[
-      "--splash-image"
-    ] &&
-      this.topGraphResult.status === "stopped" &&
-      this.topGraphResult.log.length === 0) ||
-    this.#totalNodeCount === 0
+    let content: HTMLTemplateResult | symbol = html`${
+    !this.conversationRendered
       ? splashScreen
       : [
           this.#renderLog(),
@@ -1105,7 +1140,84 @@ export class Template extends LitElement implements AppTemplate {
       <div id="content">${content}</div>
     </section>`;
   }
+
+  #restartRun() {
+    this.eventsQueue.push(...this.run?.events ?? []);
+    this.dispatchEvent(new StopEvent(true));
+    this.dispatchEvent(new RunEvent());
+    this.#scrollToLatestUserQuery(0);
+  }
+
+  #renderRuntime() {
+    this.conversationRendered = true;
+  }
+
+  #startFlow() {
+    console.log('start the flow!');
+    this.dispatchEvent(new RunEvent());
+  }
   
+  #flowIsNotStarted() {
+    if (!this.topGraphResult) {
+      return true;
+    }
+    if (this.topGraphResult.log.length === 0) {
+      return true;
+    }
+    if (this.topGraphResult.status === "stopped") {
+      return true;
+    }
+    if (!this.conversationRendered) {
+      return true;
+    }
+    return false;
+  }
+
+  // Occurs when the flow is not started yet or alreayd end.
+  async #processMessage() {
+    console.log('Processing the messsage!!!');
+    if (!this.#inputRef.value) {
+      return;
+    }
+    const inputs = this.#inputRef.value.querySelectorAll<
+     HTMLTextAreaElement>("textarea");
+     const values = [];
+    for (const input of inputs) {
+      if (!input.checkValidity()) {
+        input.reportValidity();
+      }
+      values.push(input.value);
+      input.value = "";
+    }
+    const inputValues = values.join('');
+    const inputEvent = generateUserInputEvent(inputValues);
+    this.eventsQueue.push(inputEvent);
+    this.requestUpdate();
+    this.waitingLLMOutput = true;
+    this.#startScrolling();
+    const llmOutput = await chat(inputValues, this.graph?.description?? '');
+    if (llmOutput.triggerFlow) {
+      this.#startFlow();
+      // this.#startScrolling();
+    } else {
+      const outputEvent = generateLLMOutputEvent(llmOutput);
+      console.log('events', outputEvent);
+      this.eventsQueue.push(outputEvent);
+      this.requestUpdate();
+    }
+    this.waitingLLMOutput = false;
+  }
+
+  #startScrolling() {
+    setTimeout(() => {
+      // if (this.boardConversation) {
+      //   height = this.boardConversation.setLastUserInputHeight(this.conversationScroller.clientHeight);
+      // }
+        this.#scrollToLatestUserQuery(0);
+      }, 
+      100
+    );
+  }
 
   firstUpdated() {
     // This is used to skip the start.
@@ -1113,7 +1225,7 @@ export class Template extends LitElement implements AppTemplate {
     const urlParams = new URLSearchParams(queryString);
     const skipStart = urlParams.get('start') ?? '';
     if (skipStart === 'true' && this.state === "anonymous" || this.state === "valid") {
-      this.dispatchEvent(new RunEvent());
+      this.#renderRuntime();
     }
   }
 }

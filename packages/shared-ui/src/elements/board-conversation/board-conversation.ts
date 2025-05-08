@@ -47,6 +47,7 @@ import {
   isLLMContentBehavior,
 } from "../../utils/behaviors.js";
 import "../../app-templates/basic/generating-loader/generating-loader.js";
+import {ManualEvent} from "@breadboard-ai/shared-ui/app-templates/basic/conversation-manager/conversation-manager.js";
 
 @customElement("bb-board-conversation")
 export class BoardConversation extends LitElement {
@@ -60,7 +61,7 @@ export class BoardConversation extends LitElement {
   accessor inputsFromLastRun: InspectableRunInputs | null = null;
 
   @property({ reflect: false })
-  accessor events: InspectableRunEvent[] | null = null;
+  accessor events: (InspectableRunEvent | ManualEvent)[] | null = null;
 
   @property({ reflect: true })
   accessor eventPosition = 0;
@@ -101,12 +102,6 @@ export class BoardConversation extends LitElement {
   #isHidden = false;
   #serializedRun: SerializedRun | null = null;
   #serializedRunUrl: string | null = null;
-
-  #resizeObserver = new ResizeObserver(() => {
-    console.log('resizing!');
-
-
-  })
 
   #observer = new IntersectionObserver((entries) => {
     if (entries.length === 0) {
@@ -501,23 +496,18 @@ export class BoardConversation extends LitElement {
   }
 
   public setLastUserInputHeight(scrollHeight: number) {
-    console.log('scrollHeight', scrollHeight);
     const nodes = this.renderRoot.querySelectorAll('.user-output');
     if (!!nodes && nodes.length > 0) {
       const lastNode = nodes.item(nodes.length - 1);
-      console.log('user output clientHeight', lastNode.clientHeight);
       let nextSibling = lastNode.nextElementSibling;
       let heightSum = lastNode.clientHeight;
       let lastHeight = 0;
       while(nextSibling) {
         heightSum += nextSibling.clientHeight;
-        console.log('next', nextSibling.tagName);
-        console.log('sum', heightSum);
         lastHeight = nextSibling.clientHeight;
         nextSibling = nextSibling.nextElementSibling;
       }
       const calculatedHeight = scrollHeight - heightSum + lastHeight;
-      console.log('calculatedHeight', calculatedHeight);
       this.style.setProperty('--min-last-activity-height', `${calculatedHeight}px`);
       return lastNode.clientHeight;
     }
@@ -670,13 +660,17 @@ export class BoardConversation extends LitElement {
       this.events && this.events.length
         ? nothing
         : html`<div id="click-run">${this.waitingMessage}</div>`;
-    const loader = !!this.loadingMessage? html `
+    const loader =  html `
                 <section class="activity-entry">
-                      <generating-loader
-                        .currentText=${this.loadingMessage}
-                      ></generating-loader>
+                      ${!!this.loadingMessage? 
+                        html `
+                            <generating-loader
+                              .currentText=${this.loadingMessage}
+                            ></generating-loader>
+                          `: nothing
+                      }
                 </section>
-              `: nothing;
+              `;
 
     const events =
       this.events && this.events.length
@@ -756,6 +750,51 @@ export class BoardConversation extends LitElement {
                     }
                     break;
                   }
+                  case "manual":{
+                    if (event.isInput) {
+                      const userInputContent = event.userInput;
+                      content = html `
+                        <div class="output-container">
+                          <div class=output-port>
+                            <div class="flow">
+                            </div>
+                            <div class="user">
+                              <div class="value-container">
+                                <div class="value">
+                                  <span>
+                                    <p class="manual-input">${userInputContent}</p>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      `;
+                    } else {
+                   
+                        content = html `
+                        <div class="output-container">
+                          <div class="node-output-container consumed>
+                            <div class=output-port>
+                              <div class="flow">
+                              </div>
+                              <div class="user">
+                                <div class="value-container">
+                                  <div class="value">
+                                    <div class="content">
+                                    ${this.#renderManualLLmOutput(event)}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                    `;
+                      
+                    }
+                    break;
+                  }
 
                   case "error": {
                     let output = formatError(event.error);
@@ -775,17 +814,16 @@ export class BoardConversation extends LitElement {
                             </div>
                     `;
                     break;
-                  }
-
+                  }       
                   default: {
                     return nothing;
                   }
                 }
 
                 if (
-                  event.type === "node" &&
+                  (event.type === "node" &&
                   event.end !== null &&
-                  event.node.type().type() === "input"
+                  event.node.type().type() === "input") || (event.type === "manual" && event.isInput)
                 ) {
                   return html`<section
                     ${isNewestEntry ? ref(this.#newestEntry) : nothing}
@@ -862,5 +900,12 @@ export class BoardConversation extends LitElement {
         : nothing;
 
     return [waitingMessage, events, loader];
+  }
+
+  #renderManualLLmOutput(event: ManualEvent) {
+    return html `
+      ${markdown(event.output.outputContent?? '')}
+    `;
+
   }
 }
