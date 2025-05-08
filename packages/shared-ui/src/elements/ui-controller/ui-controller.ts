@@ -791,29 +791,6 @@ export class UI extends LitElement {
                 : nothing}
             </div>
             <div id="side-nav-controls-right">
-              ${this.topGraphResult && this.topGraphResult.log.length > 0
-                ? html`<button
-                    id="back"
-                    aria-label="Reset"
-                    @click=${() => {
-                      this.dispatchEvent(new StopEvent(true));
-                    }}
-                    @pointerover=${(evt: PointerEvent) => {
-                      this.dispatchEvent(
-                        new ShowTooltipEvent(
-                          Strings.from("LABEL_RESET"),
-                          evt.clientX,
-                          evt.clientY
-                        )
-                      );
-                    }}
-                    @pointerout=${() => {
-                      this.dispatchEvent(new HideTooltipEvent());
-                    }}
-                  >
-                    <span class="g-icon">refresh</span>
-                  </button>`
-                : nothing}
               <button
                 ?disabled=${this.sideNavItem === "edit-history"}
                 @click=${() => {

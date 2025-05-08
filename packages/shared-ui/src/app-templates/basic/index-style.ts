@@ -652,18 +652,15 @@ export default  css`
               justify-content: center;
               // transition: background-color 0.3s;
             }
+            & #reset,
             & #continue {
-              margin-left: var(--bb-grid-size-2);
-              background: var(--secondary-button-color) var(--bb-icon-send) center center / 20px 20px no-repeat;
               color: var(--secondary-button-color-text);
-
-              
-
               width: 40px;
               height: 40px;
               font-size: 0;
               border: none;
               border-radius: 50%;
+              background-color: var(--secondary-button-color); //unset;
 
               --transition-properties: opacity;
               transition: var(--transition);
@@ -681,8 +678,13 @@ export default  css`
                 &:focus {
                   // opacity: 1;
                   color: #444746;
+                  background-color: var(--bb-neutral-100);
                 }
               }
+            }
+
+            & #continue {
+              background: var(--secondary-button-color) var(--bb-icon-send) center center / 20px 20px no-repeat;
             }
 
           & .search-button,
