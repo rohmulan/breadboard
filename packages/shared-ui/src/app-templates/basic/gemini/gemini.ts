@@ -121,7 +121,8 @@ export type GeminiErrorResponse = {
 };
 
 export type GeminiAPIOutputs = {
-  candidates: Candidate[];
+  candidates?: Candidate[];
+  error?: GeminiErrorResponse;
 };
 
 function endpointURL(model?: string) {
@@ -134,7 +135,7 @@ function endpointURL(model?: string) {
 export async function gemini(
   userInputContext: LLMContent[],
   boardDescription: string
-): Promise<void> {
+): Promise<GeminiAPIOutputs> {
   console.log("Start fetching from gemini API");
   //Manually build userInputContext for testing purpose
   // userInputContext = [
@@ -181,18 +182,11 @@ export async function gemini(
   const data = await fetch(url, requestInit);
   if (!data.ok) {
     console.error("Error fetching from Gemini API. Status:", data.status);
-    const errorResponse = await data.json(); // Assuming error response is JSON
+    const errorResponse = await data.json();
     const err = errorResponse.error as GeminiErrorResponse;
     console.error("Error details:", errorResponse);
     console.dir(err);
-    // Error details: {
-    //     error: {
-    //       code: 403,
-    //       message: 'Request had insufficient authentication scopes.',
-    //       status: 'PERMISSION_DENIED',
-    //       details: [ [Object], [Object] ]
-    //     }
-    //   }
+    return { error: err };
   } else {
     console.log("Complete fetching from gemini API, status:", data.status);
     // Maybe define a response data type GeminiOutput to parse the response?
@@ -201,13 +195,13 @@ export async function gemini(
     console.log("Print candidate to see result...");
     const candidate = res.candidates?.at(0);
     if (!candidate) {
-      console.log("Unable to get a good response from Gemini");
-      return;
+      return { error: {message: "Unable to get a good response from Gemini"}};
     }
     if ("content" in candidate) {
       console.log("Printing content from the Gemini response");
       console.dir(candidate.content?.parts[0]);
     }
+    return { candidates: res.candidates };
   }
 }
 
@@ -285,10 +279,7 @@ function buildSystemInstructionText(): string {
 * Expected behavior: Let the user immediately know that you cannot perform this action, and offer to perform an alternative solution.
 2. The user refers to a date (e.g. "next Tuesday", "Friday", "Christmas", "1st October"), but does not provide the full YYYY-MM-DD date.
 * For past events it is always the last occurrence, for future events (eg: time off, create event, new deadline) it is always the next occurrence compared to the current time, that is 2025-02-25 12:37:30 +0100 CET (Week 08, Tuesday).
-* Expected behavior: Do not ask back, but use your best guess.
-3. Generating code snippets, coding and debugging. Since you are an expert in software development, you should answer the user directly when they ask you to provide code, or debug. Do not invoke any tools in this case.
-* Examples: "write a python code that counts the vowels in 'banana'", "what is the problem with this code? code: ...", "explain this code to me: ...", "debug this code: ...", "fix this code: ...", "write a code that calculates <task>", "how to reverse a string in java?".
-* Expected behavior: You answer the user directly with the generated code, or the explanation of the code. You make sure that you highlight the pros and cons of the various approaches.`;
+* Expected behavior: Do not ask back, but use your best guess.`;
 
   const systemInstruction = `${userInfo}\n${commonSense}\n${commonPatterns}`;
   return systemInstruction;
