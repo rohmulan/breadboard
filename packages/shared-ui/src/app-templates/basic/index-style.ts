@@ -273,6 +273,7 @@ export default  css`
         display: flex;
         align-items: center;
         justify-content: center;
+        margin-bottom: var(--bb-grid-size-3);
       }
     }
 

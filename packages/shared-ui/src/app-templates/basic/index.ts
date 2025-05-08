@@ -1067,28 +1067,28 @@ export class Template extends LitElement implements AppTemplate {
             ? html`${this.options.description}`
             : nothing}
         </p>
-      </div>
-      <div id="input" class="stopped">
-        <div>
-          ${this.state === "anonymous" || this.state === "valid"
-            ? html`<button
-                id="run"
-                ?disabled=${this.#totalNodeCount === 0}
-                @click=${() => {
-                  this.#renderRuntime();
-                }}
-              >
-                Get Started
-              </button>`
-            : html`<button
-                id="sign-in"
-                ?disabled=${this.#totalNodeCount === 0}
-                @click=${() => {
-                  this.dispatchEvent(new SignInRequestedEvent());
-                }}
-              >
-                Sign In
-              </button>`}
+        <div id="input" class="stopped">
+          <div>
+            ${this.state === "anonymous" || this.state === "valid"
+              ? html`<button
+                  id="run"
+                  ?disabled=${this.#totalNodeCount === 0}
+                  @click=${() => {
+                    this.#renderRuntime();
+                  }}
+                >
+                  Get Started
+                </button>`
+              : html`<button
+                  id="sign-in"
+                  ?disabled=${this.#totalNodeCount === 0}
+                  @click=${() => {
+                    this.dispatchEvent(new SignInRequestedEvent());
+                  }}
+                >
+                  Sign In
+                </button>`}
+          </div>
         </div>
       </div>
     `;
