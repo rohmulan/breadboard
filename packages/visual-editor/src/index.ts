@@ -337,6 +337,7 @@ export class Main extends LitElement {
   #downloadRunBound = this.#downloadRun.bind(this);
   #confirmUnloadWithUserFirstIfNeededBound =
     this.#confirmUnloadWithUserFirstIfNeeded.bind(this);
+  #onShowBoardEditOverlayWithEventBound = this.#onShowBoardEditOverlayWithEvent.bind(this);
   #version = "dev";
   #gitCommitHash = "dev";
   #recentBoardStore = RecentBoardStore.instance();
@@ -900,6 +901,7 @@ export class Main extends LitElement {
     window.addEventListener("pointerdown", this.#hideTooltipBound);
     window.addEventListener("keydown", this.#onKeyDownBound);
     window.addEventListener("bbrundownload", this.#downloadRunBound);
+    window.addEventListener("bbeditboarddetails", this.#onShowBoardEditOverlayWithEventBound);
   }
 
   disconnectedCallback(): void {
@@ -910,6 +912,7 @@ export class Main extends LitElement {
     window.removeEventListener("pointerdown", this.#hideTooltipBound);
     window.removeEventListener("keydown", this.#onKeyDownBound);
     window.removeEventListener("bbrundownload", this.#downloadRunBound);
+    window.removeEventListener("bbeditboarddetails", this.#onShowBoardEditOverlayWithEventBound);
   }
 
   #handleSecretEvent(event: RunSecretEvent, runner?: HarnessRunner) {
@@ -2157,6 +2160,13 @@ export class Main extends LitElement {
     };
   }
 
+  #onShowBoardEditOverlayWithEvent() {
+    const x = this.#boardOverflowMenuConfiguration?.x ?? 100;
+    const y = this.#boardOverflowMenuConfiguration?.y ?? 100;
+
+    this.#showBoardEditOverlay(this.tab, x, y, null, null);
+  }
+
   async #setNodeDataForConfiguration(
     configuration: Partial<BreadboardUI.Types.NodePortConfiguration>,
     nodeConfiguration: NodeConfiguration | null
@@ -2695,7 +2705,7 @@ export class Main extends LitElement {
           if (this.#runtime.board.canSave(tabId)) {
             actions.push({
               title: Strings.from("COMMAND_EDIT_PROJECT_INFORMATION"),
-              name: "edit",
+              name: "edit-board-details",
               icon: "edit",
               value: tabId,
             });
@@ -2773,7 +2783,10 @@ export class Main extends LitElement {
 
               switch (actionEvt.action) {
                 case "edit-board-details": {
-                  this.#showBoardEditOverlay(tab, x, y, null, null);
+                  this.dispatchEvent(
+                    new BreadboardUI.Events.EditBoardDetailsEvent()
+                  );
+                  // this.#showBoardEditOverlay(tab, x, y, null, null);
                   break;
                 }
 

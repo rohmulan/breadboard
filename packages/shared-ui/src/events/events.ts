@@ -1581,3 +1581,11 @@ export class BoardDeleteEvent extends Event {
     super(BoardDeleteEvent.eventName, { ...eventInit });
   }
 }
+
+export class EditBoardDetailsEvent extends Event {
+  static eventName = 'bbeditboarddetails';
+
+  constructor() {
+    super(EditBoardDetailsEvent.eventName, {...eventInit});
+  }
+}

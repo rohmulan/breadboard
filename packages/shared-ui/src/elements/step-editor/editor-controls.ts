@@ -10,6 +10,7 @@ const Strings = StringsHelper.forSection("Editor");
 import { LitElement, html, css, nothing, HTMLTemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import {
+  EditBoardDetailsEvent,
   HideTooltipEvent,
   KitNodeChosenEvent,
   ShowAssetOrganizerEvent,
@@ -1108,6 +1109,11 @@ export class EditorControls extends LitElement {
         }}
         @pointerout=${() => {
           this.dispatchEvent(new HideTooltipEvent());
+        }}
+        @click=${() => {
+          this.dispatchEvent(
+            new EditBoardDetailsEvent()
+          );
         }}
       >
         <span class="g-icon">edit</span>
