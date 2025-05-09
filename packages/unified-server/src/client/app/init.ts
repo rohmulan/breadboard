@@ -41,6 +41,19 @@ const secondaryColor = getGlobalColor("--bb-ui-400");
 const backgroundColor = getGlobalColor("--bb-neutral-0");
 const textColor = getGlobalColor("--bb-neutral-900");
 const primaryTextColor = getGlobalColor("--bb-neutral-0");
+const secondaryBackgroundColor = "#d3e3fd";
+const primaryButtonColor = getGlobalColor("--bb-sys-color-primary");
+const primaryButtonColorText = getGlobalColor("--bb-neutral-0");
+const bubbleBackgroundColor = "#e9eef6";
+const primaryColorDark = getGlobalColor("--bb-ui-300");
+const secondaryColorDark = getGlobalColor("--bb-ui-600");
+const backgroundColorDark = getGlobalColor("--bb-neutral-900");
+const textColorDark = getGlobalColor("--bb-neutral-0");
+const primaryTextColorDark = getGlobalColor("--bb-neutral-900");
+const secondaryBackgroundColorDark = getGlobalColor("--bb-ui-800");
+const primaryButtonColorDark = getGlobalColor("--bb-ui-300");
+const primaryButtonColorTextDark = getGlobalColor("--bb-neutral-900");
+const bubbleBackgroundColorDark = "red";
 
 async function fetchFlow() {
   try {
@@ -183,6 +196,13 @@ function createDefaultTheme(): AppTheme {
     backgroundColor: backgroundColor,
     textColor: textColor,
     primaryTextColor: primaryTextColor,
+    secondaryBackgroundColor: secondaryBackgroundColor,
+    primaryButtonColor: primaryButtonColor,
+    primaryButtonColorText: primaryButtonColorText,
+    bubbleBackgroundColor: bubbleBackgroundColor,
+    secondaryButtonColor:"#f8fafd",
+    secondaryButtonColorText: "#747775",
+    primaryBorderColor: "rgb(11, 87, 208)",
     splashScreen: {
       storedData: {
         handle: "/images/app/generic-flow.jpg",
