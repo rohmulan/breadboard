@@ -537,6 +537,8 @@ export interface AppThemeColors {
   secondaryBackgroundColor: string;
   primaryButtonColor: string;
   primaryButtonColorText: string;
+  primaryButtonColorDisabled: string;
+  primaryButtonColorTextDisabled: string;
   bubbleBackgroundColor: string;
   secondaryButtonColor:string,
   secondaryButtonColorText: string,

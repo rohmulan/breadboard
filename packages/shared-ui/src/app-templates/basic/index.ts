@@ -882,6 +882,8 @@ export class Template extends LitElement implements AppTemplate {
       styles["--background-color-secondary"] = this.options.theme.secondaryBackgroundColor;
       styles["--primary-button-color"] = this.options.theme.primaryButtonColor;
       styles["--primary-button-color-text"] = this.options.theme.primaryButtonColorText;
+      styles["--primary-button-color-disabled"] = this.options.theme.primaryButtonColorDisabled;
+      styles["--primary-button-color-text-disabled"] = this.options.theme.primaryButtonColorTextDisabled;
       styles["--bubble-background-color"] = this.options.theme.bubbleBackgroundColor;
       styles["--secondary-button-color"] = this.options.theme.secondaryButtonColor;
       styles["--secondary-button-color-text"] = this.options.theme.secondaryButtonColorText;

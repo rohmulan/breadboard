@@ -537,6 +537,11 @@ export default  css`
             opacity: 1;
           }
         }
+        &:disabled {
+          background-color: var(--primary-button-color-disabled);
+          border-color: var(--primary-button-color-disabled);
+          color: var(--primary-button-color-text-disabled)
+        }
       }
 
       & #sign-in {

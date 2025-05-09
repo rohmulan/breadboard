@@ -38,6 +38,8 @@ const textColor = getGlobalColor("--bb-neutral-900");
 const primaryTextColor = getGlobalColor("--bb-neutral-0");
 const primaryButtonColor = getGlobalColor("--bb-sys-color-primary");
 const primaryButtonColorText = getGlobalColor("--bb-neutral-0");
+const primaryButtonColorDisabled = getGlobalColor("--bb-neutral-200");
+const primaryButtonColorTextDisabled = getGlobalColor("--bb-neutral-500");
 
 const bubbleBackgroundColor = "#e9eef6";
 
@@ -54,6 +56,8 @@ const secondaryBackgroundColorDark = getGlobalColor("--bb-ui-800");
 const primaryButtonColorDark = getGlobalColor("--bb-ui-300");
 const primaryButtonColorTextDark = getGlobalColor("--bb-neutral-900");
 const bubbleBackgroundColorDark = "red";
+const primaryButtonColorDisabledDark = getGlobalColor("--bb-neutral-200");
+const primaryButtonColorTextDisabledDark = getGlobalColor("--bb-neutral-500");
 
 
 
@@ -158,6 +162,8 @@ export class AppPreview extends LitElement {
       secondaryBackgroundColor: secondaryBackgroundColor,
       primaryButtonColor: primaryButtonColor,
       primaryButtonColorText: primaryButtonColorText,
+      primaryButtonColorDisabled: primaryButtonColorDisabled,
+      primaryButtonColorTextDisabled: primaryButtonColorTextDisabled,
       bubbleBackgroundColor: bubbleBackgroundColor,
       secondaryButtonColor:"#f8fafd",
       secondaryButtonColorText: "#747775",
@@ -181,6 +187,8 @@ export class AppPreview extends LitElement {
       secondaryBackgroundColor: secondaryBackgroundColorDark,
       primaryButtonColor: primaryButtonColorDark,
       primaryButtonColorText: primaryButtonColorTextDark,
+      primaryButtonColorDisabled: primaryButtonColorDisabledDark,
+      primaryButtonColorTextDisabled: primaryButtonColorTextDisabledDark,
       bubbleBackgroundColor: bubbleBackgroundColorDark,
       secondaryButtonColor:"#333537",
       secondaryButtonColorText: "#8e918f",
