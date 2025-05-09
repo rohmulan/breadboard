@@ -212,6 +212,29 @@ function createDefaultTheme(): AppTheme {
   };
 }
 
+function createDarkTheme(): AppTheme {
+  return {
+    primaryColor: primaryColorDark,
+    secondaryColor: secondaryColorDark,
+    backgroundColor: backgroundColorDark,
+    textColor: textColorDark,
+    primaryTextColor: primaryTextColorDark,
+    secondaryBackgroundColor: secondaryBackgroundColorDark,
+    primaryButtonColor: primaryButtonColorDark,
+    primaryButtonColorText: primaryButtonColorTextDark,
+    bubbleBackgroundColor: bubbleBackgroundColorDark,
+    secondaryButtonColor:"#333537",
+    secondaryButtonColorText: "#8e918f",
+    primaryBorderColor: "rgb(11, 87, 208)",
+    splashScreen: {
+      storedData: {
+        handle: "/images/app/generic-flow.jpg",
+        mimeType: "image/jpeg",
+      },
+    },
+  };
+}
+
 function extractThemeFromFlow(flow: GraphDescriptor | null): {
   theme: AppTheme;
   templateAdditionalOptionsChosen: Record<string, string>;
@@ -223,8 +246,12 @@ function extractThemeFromFlow(flow: GraphDescriptor | null): {
 
   let templateAdditionalOptionsChosen: Record<string, string> = {};
 
-  const theme: AppTheme = createDefaultTheme();
-
+  let theme: AppTheme = createDefaultTheme();
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  if (urlParams.get('dark')) {
+    theme = createDarkTheme();
+  }
   console.log(flow);
 
   if (flow?.metadata?.visual?.presentation) {
