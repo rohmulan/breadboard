@@ -26,7 +26,6 @@ import Mode from "../shared/styles/icons.js";
 import Animations from "../shared/styles/animations.js";
 import AppTemplatesStyle from "./index-style.js";
 import ThemeStyle from "./theme-style";
-import "./generating-loader/generating-loader.js";
 
 import { classMap } from "lit/directives/class-map.js";
 import {
@@ -78,15 +77,11 @@ import { map } from "lit/directives/map.js";
 import { markdown } from "../../directives/markdown";
 import "./text-streamer/text-streamer.js";
 import { BehaviorSubject, takeUntil, first} from "rxjs";
-import {ManualEvent, chat, generateUserInputEvent, generateLLMOutputEvent} from "./conversation-manager/conversation-manager.js";
-interface Turn {
-  query?: string;
-  reply? : TopGraphRunResult;
-  fixedReply?: string;
-}
+import {ManualEvent, generateUserInputEvent, generateLLMOutputEvent, ConversationManager} from "./conversation-manager/conversation-manager.js";
 import { maybeConvertToYouTube } from "../../utils/substitute-input";
-import { transpileModule } from "typescript";
+import { OutputFileType, transpileModule } from "typescript";
 import { icons } from "../../styles/icons";
+import { GeminiAPIOutputs, FunctionCallCapabilityPart, LLMContent as GeminiLLMContent } from "./gemini/gemini";
 
 @customElement("app-basic")
 export class Template extends LitElement implements AppTemplate {
@@ -156,7 +151,7 @@ export class Template extends LitElement implements AppTemplate {
   accessor waitingLLMOutput = false;
 
   @state()
-  accessor currentRunEvents: InspectableRunEvent[] = [];
+  accessor currentRunEvents: (InspectableRunEvent | ManualEvent)[] = [];
 
   @query('.conversations')
   accessor conversationScroller!: HTMLElement;
@@ -168,6 +163,7 @@ export class Template extends LitElement implements AppTemplate {
   accessor boardConversation!: BoardConversation;
 
   #allowedMimeTypes: string | null = null;
+  #conversationManager = new ConversationManager();
 
   get additionalOptions() {
     return {
@@ -198,7 +194,6 @@ export class Template extends LitElement implements AppTemplate {
 
   #inputRef: Ref<HTMLDivElement> = createRef();
   #assetShelfRef: Ref<AssetShelf> = createRef();
-  #turns: Turn[] = [];
 
   #renderControls(topGraphResult: TopGraphRunResult) {
     if (topGraphResult.currentNode?.descriptor.id) {
@@ -264,8 +259,20 @@ export class Template extends LitElement implements AppTemplate {
 
 
   #renderFullConversation() {
-      const run = this.run ?? null;
-      const events = this.eventsQueue;
+    const run = this.run ?? null;
+    let events = [];
+      // Initial the event queue.
+    if (this.currentRunEvents && this.currentRunEvents.length > 0 && this.#flowIsNotStarted()) {
+      this.eventsQueue.push(...this.currentRunEvents);
+      this.currentRunEvents = [];
+    }
+    if (this.#flowIsNotStarted()) {
+      events = this.eventsQueue;
+    } else {
+      const flowEvents = run?.events ?? [];
+       events = [...this.eventsQueue, ...flowEvents];
+       this.currentRunEvents = flowEvents;
+    }
       const eventPosition = events.length - 1;
   
       const hideLast = this.status === STATUS.STOPPED;
@@ -294,133 +301,6 @@ export class Template extends LitElement implements AppTemplate {
       `;
   }
   
-  #renderActivity(topGraphResult: TopGraphRunResult) {
-    let activityContents:
-      | HTMLTemplateResult
-      | Array<HTMLTemplateResult | symbol>
-      | symbol = nothing;
-
-    const currentItem = topGraphResult.log.at(-1);
-    if (currentItem?.type === "error") {
-      activityContents = html`
-        <details class="error">
-          <summary>
-            <h1>We are sorry, but there was a problem with this flow.</h1>
-            <p>Tap for more details</p>
-          </summary>
-          <div>
-            <p>${extractError(currentItem.error)}</p>
-          </div>
-        </details>
-      `;
-    } else if (
-      currentItem?.type === "edge" &&
-      topGraphResult.status === "paused"
-    ) {
-      // Attempt to find the most recent output. If there is one, show it
-      // otherwise show any message that's coming from the edge.
-      let lastOutput = null;
-      for (let i = topGraphResult.log.length - 1; i >= 0; i--) {
-        const result = topGraphResult.log[i];
-        if (result.type === "edge" && result.descriptor?.type === "output") {
-          lastOutput = result;
-          break;
-        }
-      }
-
-      // Render the output.
-      if (lastOutput !== null) {
-        activityContents = html`<bb-multi-output
-          .outputs=${lastOutput.value ?? null}
-        ></bb-multi-output>`;
-      }
-    } else if (topGraphResult.status === "running") {
-      // TODO: move this into conversations.
-      let status: HTMLTemplateResult | symbol = nothing;
-      let bubbledValue: HTMLTemplateResult | symbol = nothing;
-
-      // if (topGraphResult.currentNode?.descriptor.metadata?.title) {
-      //   status = html`<div id="status">
-      //     ${topGraphResult.currentNode.descriptor.metadata.title} 
-      //   </div>`;
-      // }
-
-      let idx = 0;
-      let lastOutput: EdgeLogEntry | null = null;
-      for (let i = topGraphResult.log.length - 1; i >= 0; i--) {
-        const result = topGraphResult.log[i];
-        if (result.type === "edge" && result.value && result.schema) {
-          lastOutput = result;
-          idx = i;
-          break;
-        }
-      }
-
-      if (lastOutput !== null && lastOutput.schema && lastOutput.value) {
-        bubbledValue = html`${repeat(
-          Object.entries(lastOutput.schema.properties ?? {}),
-          () => idx,
-          ([name, property]) => {
-            if (!lastOutput.value) {
-              return nothing;
-            }
-
-            if (property.type !== "string" && property.format !== "markdown") {
-              return nothing;
-            }
-
-            const value = lastOutput.value[name];
-            if (typeof value !== "string") {
-              return nothing;
-            }
-
-            const classes: Record<string, boolean> = {};
-            if (property.title) {
-              classes[
-                property.title.toLocaleLowerCase().replace(/\W/gim, "-")
-              ] = true;
-            }
-
-            if (property.icon) {
-              classes[property.icon.toLocaleLowerCase().replace(/\W/gim, "-")] =
-                true;
-            }
-
-            return html`<div class=${classMap(classes)}>
-              <h1>${property.title}</h1>
-              ${markdown(value)}
-            </div> `;
-          }
-        )}`;
-      }
-
-      activityContents = [bubbledValue, status];
-    } else {
-      // Find the last item.
-      let lastOutput = null;
-      for (let i = topGraphResult.log.length - 1; i >= 0; i--) {
-        const result = topGraphResult.log[i];
-        if (result.type === "edge" && result.value) {
-          lastOutput = result;
-          break;
-        }
-      }
-
-      if (lastOutput !== null) {
-        activityContents = html`
-        <bb-multi-output
-          .outputs=${lastOutput.value ?? null}
-        ></bb-multi-output>`;
-      }
-    }
-
-    return html`
-    <div id="activity">
-      ${activityContents}
-    </div>
-  `;
-  }
-
   #toLLMContentWithTextPart(text: string): NodeValue {
     return { role: "user", parts: [{ text }] };
   }
@@ -624,6 +504,7 @@ export class Template extends LitElement implements AppTemplate {
       if (!canProceed) {
         return;
       }
+      console.log('Input:', inputValues);
 
       this.dispatchEvent(
         new InputEnterEvent(id, inputValues, /* allowSavingIfSecret */ true)
@@ -970,11 +851,6 @@ export class Template extends LitElement implements AppTemplate {
           this.#nodesLeftToVisit.delete(item.descriptor.id);
         }
       }
-      const incomingEvents = this.run?.events;
-      if (incomingEvents && incomingEvents.length > this.currentRunEvents.length) {
-        this.eventsQueue.push(...incomingEvents.slice(this.currentRunEvents.length));
-      }
-      this.currentRunEvents = incomingEvents?? [];
     }
   }
 
@@ -1167,13 +1043,6 @@ export class Template extends LitElement implements AppTemplate {
     </section>`;
   }
 
-  #restartRun() {
-    this.eventsQueue.push(...this.run?.events ?? []);
-    this.dispatchEvent(new StopEvent(true));
-    this.dispatchEvent(new RunEvent());
-    this.#scrollToLatestUserQuery(0);
-  }
-
   #renderRuntime() {
     this.conversationRendered = true;
   }
@@ -1205,6 +1074,7 @@ export class Template extends LitElement implements AppTemplate {
     if (!this.#inputRef.value) {
       return;
     }
+  
     const inputs = this.#inputRef.value.querySelectorAll<
      HTMLTextAreaElement>("textarea");
      const values = [];
@@ -1216,21 +1086,28 @@ export class Template extends LitElement implements AppTemplate {
       input.value = "";
     }
     const inputValues = values.join('');
-    const inputEvent = generateUserInputEvent(inputValues);
+    const inputEvent = this.#conversationManager.acceptUserQuery(inputValues);
     this.eventsQueue.push(inputEvent);
     this.requestUpdate();
     this.waitingLLMOutput = true;
     this.#startScrolling();
-    const llmOutput = await chat(inputValues, this.graph?.description?? '');
-    if (llmOutput.triggerFlow) {
-      this.#startFlow();
-      // this.#startScrolling();
-    } else {
-      const outputEvent = generateLLMOutputEvent(llmOutput);
-      console.log('events', outputEvent);
-      this.eventsQueue.push(outputEvent);
-      this.requestUpdate();
+    const llmOutput = await this.#conversationManager.chatWithLLM();
+    if (llmOutput.output) {
+      if (llmOutput.output.error) {
+        // error handling!
+
+      } else {
+        const llmContent = llmOutput.output.candidates ? llmOutput.output.candidates[0].content : undefined;
+        if (this.#ifNeedToTriggerFlow(llmContent)) {
+          this.#startFlow();
+          // this.#startScrolling();
+        } else {
+          this.eventsQueue.push(llmOutput);
+          this.requestUpdate();
+        }
+      }
     }
+    
     this.waitingLLMOutput = false;
   }
 
@@ -1245,11 +1122,26 @@ export class Template extends LitElement implements AppTemplate {
     );
   }
 
+  #ifNeedToTriggerFlow(output: GeminiLLMContent | undefined): boolean {
+    if (!output) {
+      return false;
+    }
+    if (output.parts && output.parts[0]) {
+      const part = output.parts[0] as FunctionCallCapabilityPart;
+      return !!part.functionCall;
+    }
+    return false;
+  } 
+
   firstUpdated() {
+    console.log('This is the graph', this.graph);
     // This is used to skip the start.
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const skipStart = urlParams.get('start') ?? '';
+    if (this.graph) {
+      this.#conversationManager.initial(this.graph);
+    }
     if (skipStart === 'true' && this.state === "anonymous" || this.state === "valid") {
       this.#renderRuntime();
     }

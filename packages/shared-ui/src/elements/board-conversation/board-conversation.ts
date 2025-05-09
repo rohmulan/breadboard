@@ -48,6 +48,7 @@ import {
 } from "../../utils/behaviors.js";
 import "../../app-templates/basic/generating-loader/generating-loader.js";
 import {ManualEvent} from "@breadboard-ai/shared-ui/app-templates/basic/conversation-manager/conversation-manager.js";
+import { DataPart, TextCapabilityPart } from "../../app-templates/basic/gemini/gemini.js";
 
 @customElement("bb-board-conversation")
 export class BoardConversation extends LitElement {
@@ -689,8 +690,8 @@ export class BoardConversation extends LitElement {
                   | symbol = nothing;
                 switch (event.type) {
                   case "node": {
-                    const { node, end } = event;
-                    console.log({event, node, end});
+                    const { node, end, id} = event;
+                    console.log({event, node, end, id});
                     const { type } = node.descriptor;
                     // `end` is null if the node is still running
                     // that is, the `nodeend` for this node hasn't yet
@@ -903,9 +904,24 @@ export class BoardConversation extends LitElement {
   }
 
   #renderManualLLmOutput(event: ManualEvent) {
-    return html `
-      ${markdown(event.output.outputContent?? '')}
-    `;
-
+    const content = event.output;
+    if (!content) {
+      return nothing;
+    }
+    if (content.error) {
+      const errorString = `Error code: ${content.error.code}, Details: ${content.error.message}`;
+      return html `${errorString}`;
+    } else {
+      // We assume only text parts are here. 
+      if (!content.candidates || !content.candidates[0]) return nothing;
+     const textValue =  content.candidates[0].content?.parts
+        .map((part) => {
+          const textContent = (part as TextCapabilityPart).text;
+          return textContent ?? "";
+        }).join("");
+        return html `
+        ${markdown(textValue?? "")}
+      `;  
+    }
   }
 }
