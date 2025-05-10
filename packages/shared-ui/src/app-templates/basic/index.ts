@@ -18,7 +18,7 @@ import {
   EdgeLogEntry,
   TopGraphRunResult,
   NodeLogEntry,
-  STATUS
+  STATUS,
 } from "../../types/types";
 import * as StringsHelper from "../../strings/helper.js";
 const Strings = StringsHelper.forSection("AppPreview");
@@ -35,7 +35,8 @@ import {
   isLLMContent,
   isTextCapabilityPart,
   InspectableRunEvent,
-  InspectableRunNodeEvent
+  InspectableRunNodeEvent,
+  InspectableNode
 } from "@google-labs/breadboard";
 import '@material/web/button/filled-button.js';
 import '@material/web/icon/icon.js';
@@ -76,12 +77,14 @@ import "../../elements/output/multi-output/multi-output.js";
 import { map } from "lit/directives/map.js";
 import { markdown } from "../../directives/markdown";
 import "./text-streamer/text-streamer.js";
-import { BehaviorSubject, takeUntil, first} from "rxjs";
+import { BehaviorSubject, takeUntil, first, last} from "rxjs";
 import {ManualEvent, generateUserInputEvent, generateLLMOutputEvent, ConversationManager} from "./conversation-manager/conversation-manager.js";
 import { maybeConvertToYouTube } from "../../utils/substitute-input";
 import { OutputFileType, transpileModule } from "typescript";
 import { icons } from "../../styles/icons";
-import { GeminiAPIOutputs, FunctionCallCapabilityPart, LLMContent as GeminiLLMContent } from "./gemini/gemini";
+import { GeminiAPIOutputs, FunctionCallCapabilityPart, LLMContent as GeminiLLMContent, TextCapabilityPart } from "./gemini/gemini";
+import { InputStageResult } from "../../../../breadboard/dist/src/run";
+import { ConversationElement } from "../../elements/board-conversation/board-conversation";
 
 @customElement("app-basic")
 export class Template extends LitElement implements AppTemplate {
@@ -153,6 +156,21 @@ export class Template extends LitElement implements AppTemplate {
   @state()
   accessor currentRunEvents: (InspectableRunEvent | ManualEvent)[] = [];
 
+  @state()
+  accessor hidenEventIdList: Set<string> = new Set<string>();
+
+  @state()
+  accessor skipFirstUserInput = true;
+
+  @state()
+  accessor hidenText = "";
+
+  @state() 
+  accessor conversationList: ConversationElement[] = []; 
+
+  @state()
+  accessor currentConversation: ConversationElement | undefined = undefined;
+
   @query('.conversations')
   accessor conversationScroller!: HTMLElement;
 
@@ -195,86 +213,19 @@ export class Template extends LitElement implements AppTemplate {
   #inputRef: Ref<HTMLDivElement> = createRef();
   #assetShelfRef: Ref<AssetShelf> = createRef();
 
-  #renderControls(topGraphResult: TopGraphRunResult) {
-    if (topGraphResult.currentNode?.descriptor.id) {
-      this.#nodesLeftToVisit.delete(topGraphResult.currentNode?.descriptor.id);
-    }
-
-     // Hide controls
-    return html`<div id="controls">
-      <button
-        id="back"
-        @click=${() => {
-          this.dispatchEvent(new StopEvent(true));
-        }}
-      >
-        Back
-      </button>
-
-      <div
-        id="older-data"
-        class=${classMap({
-          active: this.isInSelectionState && this.showingOlderResult,
-        })}
-      >
-        Viewing data from an earlier step. Newer data is available.
-      </div>
-    </div>`;
-  }
-
-  #renderIntroduction(fixedReply: string | undefined) {
-    const myself = 'introduction';
-    return html `
-    <div class="summary introduction">
-      <text-streamer
-        .text=${fixedReply}
-        .caller=${myself}
-        @gen-introduction-complete=${this.#readyToRenderTurns}>
-      </text-streamer>
-    </div>`;
-  }
-
-  #readyToRenderTurns() {
-  }
-
-  #renderOutput(topGraphResult: TopGraphRunResult) {
-    let outputContents: HTMLTemplateResult | symbol = nothing;
-    let lastOutput = null;
-    const currentItem = topGraphResult.log.at(-1);
-    
-    if (currentItem?.type === "edge" && topGraphResult.status === 'stopped') {
-      lastOutput = currentItem;
-      if (lastOutput !== null) {
-        outputContents = html`<bb-multi-output
-          .outputs=${lastOutput.value ?? null}
-        ></bb-multi-output>`;
-      }
-    }
-
-    if (outputContents === nothing) {
-      return nothing;
-    }
-    return html`<div id="activity" class="turn last">${outputContents}</div>`;
-  }
-
-
   #renderFullConversation() {
     const run = this.run ?? null;
-    let events = [];
+    let conversations = [];
+    if (this.topGraphResult && !this.#flowIsNotStarted()) {
+      conversations = [...this.conversationList, this.currentConversation];
+    } else {
+      conversations = [...this.conversationList];
+    }
       // Initial the event queue.
     if (this.currentRunEvents && this.currentRunEvents.length > 0 && this.#flowIsNotStarted()) {
       this.eventsQueue.push(...this.currentRunEvents);
       this.currentRunEvents = [];
     }
-    if (this.#flowIsNotStarted()) {
-      events = this.eventsQueue;
-    } else {
-      const flowEvents = run?.events ?? [];
-       events = [...this.eventsQueue, ...flowEvents];
-       this.currentRunEvents = flowEvents;
-    }
-      const eventPosition = events.length - 1;
-  
       const hideLast = this.status === STATUS.STOPPED;
       const graphUrl = this.graph?.url ? new URL(this.graph.url) : null;
       const nextNodeId = this.topGraphResult?.currentNode?.descriptor.id ?? null;
@@ -284,8 +235,6 @@ export class Template extends LitElement implements AppTemplate {
           <bb-board-conversation
             .graphUrl=${graphUrl}
             .run=${run}
-            .events=${events}
-            .eventPosition=${eventPosition}
             .showExtendedInfo=${false}
             .showLogTitle=${false}
             .logTitle=${"Run"}
@@ -295,103 +244,36 @@ export class Template extends LitElement implements AppTemplate {
             .waitingMessage=${""}
             .scrollHeight=${this.conversationScroller?.clientHeight ?? 0}
             .loadingMessage=${this.#getLoadingMessage()}
+            .conversationList=${conversations}
             name=${Strings.from("LABEL_PROJECT")}
           ></bb-board-conversation>
         </div>
       `;
   }
   
-  #toLLMContentWithTextPart(text: string): NodeValue {
-    return { role: "user", parts: [{ text }] };
+  #toLLMContentWithTextPart(text: string, role = "user"): NodeValue {
+    return { role, parts: [{ text }] };
   }
 
   #renderLog() {
     return html`
     <div class="conversations">
       <div class="conversations-content">
-        ${this.#renderIntro()}
         ${this.#renderFullConversation()} 
       </div>
     </div>
     `
   }
 
-  #renderTurns(topGraphResult: TopGraphRunResult) {
-    const logs = topGraphResult.log.filter((logEntry) => logEntry.type === "edge");
-    // isReadyToRenderTurns is determined by the event from text streamer. Once we get the event that introduction is printed
-    // we can continue render turns.
-      return  repeat(logs, (logEntry, index)=>{
-        if(logEntry.descriptor?.type === 'input') {
-          //This means there is a user input lets fetch both the question and reply
-          const props = Object.keys(logEntry.schema?.properties ?? {});
-          const lastLog = index === (logs.length - 1);
-          return html`
-              ${repeat(props, (propKey, index)=>{
-                const flowquery = logEntry.schema?.properties?.[propKey].description;
-                const userResponse = logEntry.value?.[propKey];
-                const lastPropKey = index === (props.length - 1);
-  
-                return html`
-                <div class="turn ${classMap({
-                  'last': lastLog && lastPropKey && topGraphResult.status !== 'running'})}">
-                ${this.#renderUserInputLabel(flowquery)}
-                ${userResponse && this.#renderUserInput(userResponse)}
-                </div>
-              `
-            })}
-          `
-        }
-        })
-  
-  }
-
-  #renderUserInput(input: NodeValue) {
-    if(input && typeof input === 'object' &&  input['parts' as keyof typeof input] ) {
-      return html `
-      <div class="question-block">
-        <div class="question-wrapper">
-          <p class="question-bubble">${input['parts' as keyof typeof input][0]['text']}</p>
-        </div>
-      </div>
-        `;
-    }
-    return html `
-      <div class="question-block">
-        <div class="question-wrapper">
-          <p class="question-bubble">${input}</p>
-        </div>
-      </div>
-        `;
-  }
-
-  #renderUserInputLabel(userInput: string | undefined) {
-    return html `
-    <div class="summary">
-      <text-streamer 
-        .text=${userInput}>
-      </text-streamer>
-    </div>`;
-  }
-
-  #renderIntro() {
-    const intro = `Hello, this is ${this.graph?.title} and this is what I can do: ${this.graph?.description}`
-    return this.#renderIntroduction(intro);
-
-}
-
-
 // Right now, it's the same as scroll to the bottom.
 #scrollToLatestUserQuery(height: number, behavior: ScrollBehavior = 'smooth') {
   const calculatedTop =  this.conversationScroller.scrollHeight -
   height - 10;
-  console.log('scrolling!!!', calculatedTop);
   this.conversationScroller?.scrollTo({
     top: calculatedTop,
     behavior,
   });
 }
-
-
 
 #getLoadingMessage () {
   if (this.topGraphResult?.status === 'running') {
@@ -437,6 +319,7 @@ export class Template extends LitElement implements AppTemplate {
       <div class="controls"></div>`;
 
     const continueRun = (id: string) => {
+      let stringValue = "";
       if (!this.#inputRef.value) {
         return;
       }
@@ -480,7 +363,7 @@ export class Template extends LitElement implements AppTemplate {
           } else {
             inputValues[input.name] = value;
           }
-
+          stringValue = value;
           value = "";
           input.value = "";
         } else {
@@ -504,7 +387,12 @@ export class Template extends LitElement implements AppTemplate {
       if (!canProceed) {
         return;
       }
-      console.log('Input:', inputValues);
+      // Push the current conversation to the list which will not be changed later.
+      if (this.currentConversation) {
+        this.conversationList.push(this.currentConversation);
+        this.currentConversation = undefined;
+      }
+      this.conversationList.push({userInput: stringValue });
 
       this.dispatchEvent(
         new InputEnterEvent(id, inputValues, /* allowSavingIfSecret */ true)
@@ -551,6 +439,7 @@ export class Template extends LitElement implements AppTemplate {
           @click=${() => {
             this.dispatchEvent(new StopEvent(true));
             this.conversationRendered = false;
+            this.#reset();
           }}
         >
           <span class="g-icon">refresh</span>
@@ -707,7 +596,7 @@ export class Template extends LitElement implements AppTemplate {
 
             return html`<div class="user-input">
               <textarea
-                placeholder= ${this.#disableTyping() ? "" : "Search content or ask questions"}
+                placeholder="Search content or ask questions"
                 name=${name}
                 type="text"
                 data-type=${dataType}
@@ -742,9 +631,7 @@ export class Template extends LitElement implements AppTemplate {
         @keydown=${(e: KeyboardEvent) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-           
               continueRun("unknown");
-            
           }
         }}
       ></textarea>
@@ -784,8 +671,6 @@ export class Template extends LitElement implements AppTemplate {
         if (!(evt.key === "Enter" && isCtrlCommand)) {
           return;
         }
-       
-
           continueRun("unknown");
         
       }}
@@ -849,6 +734,45 @@ export class Template extends LitElement implements AppTemplate {
           }
 
           this.#nodesLeftToVisit.delete(item.descriptor.id);
+        }
+      }
+      const oldTopGraphResult = changedProperties.get("topGraphResult") as TopGraphRunResult;
+      if (oldTopGraphResult.status !== this.topGraphResult?.status 
+          && this.topGraphResult?.status === "stopped"
+          && this.topGraphResult?.log
+          && this.topGraphResult?.log.length > 0) {
+          // the flow is ended.
+          this.conversationList.push({model: this.#renderActivity(this.topGraphResult)});
+          this.currentConversation = undefined;      
+      } else {
+        // For the case flow is not ended.
+        if (this.topGraphResult 
+          && this.topGraphResult.log.length > 0 
+          && this.topGraphResult.status !== "stopped") {
+          const currentItem = this.topGraphResult.log.at(-1);
+          let lastOutput = null;
+          if ( currentItem?.type === "edge" &&
+                this.topGraphResult.status === "paused") {
+                // In this case, engine is waiting for user input.
+                  for (let i = this.topGraphResult.log.length - 1; i >= 0; i--) {
+                    const result = this.topGraphResult.log[i];
+                    if (result.type === "edge" && result.descriptor?.type === "output") {
+                      lastOutput = result;
+                      break;
+                    }
+                  }
+                  if (this.#hideOutput(lastOutput)) {
+                    console.log('This is the question LLM can provide answer!');
+                    setTimeout(() => {
+                      this.#dispatchLLMContent();
+                    });
+
+                  } else {
+                    this.currentConversation = {model: this.#renderActivity(this.topGraphResult)};
+                  }
+            } else {
+              this.currentConversation = {model: this.#renderActivity(this.topGraphResult)};
+            }
         }
       }
     }
@@ -1045,12 +969,12 @@ export class Template extends LitElement implements AppTemplate {
     </section>`;
   }
 
-  #renderRuntime() {
+  async #renderRuntime() {
     this.conversationRendered = true;
+    await this.#llmIntroduction();
   }
 
   #startFlow() {
-    console.log('start the flow!');
     this.dispatchEvent(new RunEvent());
   }
   
@@ -1089,22 +1013,31 @@ export class Template extends LitElement implements AppTemplate {
     }
     const inputValues = values.join('');
     const inputEvent = this.#conversationManager.acceptUserQuery(inputValues);
+    if (this.currentConversation) {
+      this.conversationList.push(this.currentConversation);
+      this.currentConversation = undefined;
+    }
+    this.conversationList.push({
+      userInput: inputValues,
+    })
     this.eventsQueue.push(inputEvent);
     this.requestUpdate();
     this.waitingLLMOutput = true;
     this.#startScrolling();
     const llmOutput = await this.#conversationManager.chatWithLLM();
-    if (llmOutput.output) {
-      if (llmOutput.output.error) {
+    if (llmOutput) {
+      if (llmOutput.error) {
         // error handling!
 
       } else {
-        const llmContent = llmOutput.output.candidates ? llmOutput.output.candidates[0].content : undefined;
+        const llmContent = llmOutput.candidates ? llmOutput.candidates[0].content : undefined;
         if (this.#ifNeedToTriggerFlow(llmContent)) {
           this.#startFlow();
-          // this.#startScrolling();
         } else {
-          this.eventsQueue.push(llmOutput);
+
+          this.conversationList.push({
+            model: this.#renderManualLLmOutput(llmOutput),
+          })
           this.requestUpdate();
         }
       }
@@ -1113,11 +1046,24 @@ export class Template extends LitElement implements AppTemplate {
     this.waitingLLMOutput = false;
   }
 
+  async #llmIntroduction() {
+    this.waitingLLMOutput = true;
+    const introduction = await this.#conversationManager.introduceLLM();
+    this.waitingLLMOutput = false;
+    if (introduction.error) {
+      const errorMessage = `Error code: ${introduction.error.code}, Details: ${introduction.error.message}`;
+      // only log the error for now and use the default greeting.
+      console.log(errorMessage);
+      this.conversationList.push({model: html `Hi, what can I do for you?`});
+    } else {
+      this.conversationList.push({ model: this.#renderManualLLmOutput(introduction) });
+    }
+    this.requestUpdate();
+  }
+
   #startScrolling() {
     setTimeout(() => {
-      // if (this.boardConversation) {
-      //   height = this.boardConversation.setLastUserInputHeight(this.conversationScroller.clientHeight);
-      // }
+      // Always scroll to the bottom. We are using modifying the bottom element to control the scroll. 
         this.#scrollToLatestUserQuery(0);
       }, 
       100
@@ -1135,8 +1081,191 @@ export class Template extends LitElement implements AppTemplate {
     return false;
   } 
 
-  firstUpdated() {
-    console.log('This is the graph', this.graph);
+  #reset() {
+    this.eventsQueue = [];
+    this.currentRunEvents = [];
+    this.conversationList = [];
+    this.currentConversation = undefined;
+    this.#conversationManager.initial(this.graph);
+  }
+
+  #dispatchLLMContent() {
+    const lastUserQuery = this.#conversationManager.getLatestUserContent();
+    this.hidenText = lastUserQuery;
+    console.log('this is the last user query:', lastUserQuery);
+    const inputValues: OutputValues = {};
+    
+    inputValues['request'] = this.#toLLMContentWithTextPart(lastUserQuery) as NodeValue;
+
+    this.dispatchEvent(
+      new InputEnterEvent(
+        // id is not used later. 
+        '0', 
+        inputValues, /* allowSavingIfSecret */ true)
+    );
+    
+  }
+
+  #renderActivity(topGraphResult: TopGraphRunResult) {
+    let activityContents:
+      | HTMLTemplateResult
+      | Array<HTMLTemplateResult | symbol>
+      | symbol = nothing;
+
+    const currentItem = topGraphResult.log.at(-1);
+    if (currentItem?.type === "error") {
+      activityContents = html`
+        <details class="error">
+          <summary>
+            <h1>We are sorry, but there was a problem with this flow.</h1>
+            <p>Tap for more details</p>
+          </summary>
+          <div>
+            <p>${extractError(currentItem.error)}</p>
+          </div>
+        </details>
+      `;
+    } else if (
+      currentItem?.type === "edge" &&
+      topGraphResult.status === "paused"
+    ) {
+      // Attempt to find the most recent output. If there is one, show it
+      // otherwise show any message that's coming from the edge.
+      let lastOutput = null;
+      for (let i = topGraphResult.log.length - 1; i >= 0; i--) {
+        const result = topGraphResult.log[i];
+        if (result.type === "edge" && result.descriptor?.type === "output") {
+          lastOutput = result;
+          break;
+        }
+      }
+
+      // Render the output.
+      if (lastOutput !== null) {
+        activityContents = html`<bb-multi-output
+          .showAsStatus=${true}
+          .outputs=${lastOutput.value ?? null}
+        ></bb-multi-output>`;
+      }
+    } else if (topGraphResult.status === "running") {
+      let bubbledValue: HTMLTemplateResult | symbol = nothing;
+
+      let idx = 0;
+      let lastOutput: EdgeLogEntry | null = null;
+      for (let i = topGraphResult.log.length - 1; i >= 0; i--) {
+        const result = topGraphResult.log[i];
+        if (result.type === "edge" && result.value && result.schema) {
+          lastOutput = result;
+          idx = i;
+          break;
+        }
+      }
+
+      if (lastOutput !== null && lastOutput.schema && lastOutput.value) {
+        bubbledValue = html`${repeat(
+          Object.entries(lastOutput.schema.properties ?? {}),
+          () => idx,
+          ([name, property]) => {
+            if (!lastOutput.value) {
+              return nothing;
+            }
+
+            if (property.type !== "string" && property.format !== "markdown") {
+              return nothing;
+            }
+
+            const value = lastOutput.value[name];
+            if (typeof value !== "string") {
+              return nothing;
+            }
+
+            const classes: Record<string, boolean> = {};
+            if (property.title) {
+              classes[
+                property.title.toLocaleLowerCase().replace(/\W/gim, "-")
+              ] = true;
+            }
+
+            if (property.icon) {
+              classes[property.icon.toLocaleLowerCase().replace(/\W/gim, "-")] =
+                true;
+            }
+
+            return html`<div class=${classMap(classes)}>
+              <h1>${property.title}</h1>
+              ${markdown(value)}
+            </div> `;
+          }
+        )}`;
+      }
+
+      activityContents = bubbledValue;
+    } else {
+      // Find the last item.
+      let lastOutput = null;
+      for (let i = topGraphResult.log.length - 1; i >= 0; i--) {
+        const result = topGraphResult.log[i];
+        if (result.type === "edge" && result.value) {
+          lastOutput = result;
+          break;
+        }
+      }
+
+      if (lastOutput !== null) {
+        activityContents = html`<bb-multi-output
+          .outputs=${lastOutput.value ?? null}
+        ></bb-multi-output>`;
+      }
+    }
+
+    return html`<div id="activity">${activityContents}</div>`;
+  }
+
+    #renderManualLLmOutput(event: GeminiAPIOutputs) {
+      const content = event;
+      if (!content) {
+        return nothing;
+      }
+      if (content.error) {
+        const errorString = `Error code: ${content.error.code}, Details: ${content.error.message}`;
+        return html `${errorString}`;
+      } else {
+        // We assume only text parts are here. 
+        if (!content.candidates || !content.candidates[0]) return nothing;
+       const textValue =  content.candidates[0].content?.parts
+          .map((part) => {
+            const textContent = (part as TextCapabilityPart).text;
+            return textContent ?? "";
+          }).join("");
+          return html `
+          ${markdown(textValue?? "")}
+        `;  
+      }
+    }
+
+    #hideOutput(output: EdgeLogEntry | null):boolean {
+      if (!output || !output.value || !output.schema) return false;
+      const schema = output.schema;
+      const titleMatch = output.descriptor?.metadata?.title === "User Input";
+      let anyTrue = false;
+     Object.entries(output.value).map(([name, outputValue]) => {
+        const insideSchema = schema.properties?.[name];
+        if (isLLMContent(outputValue) && outputValue.role === "user") {
+          const label = (outputValue.parts[0] as TextCapabilityPart).text;
+          if (!!label && this.#LLMCanProvideAnswer(label)) {
+            anyTrue = true;
+          }
+        }
+      });      
+      return anyTrue && titleMatch;
+    }
+
+    #LLMCanProvideAnswer(question: string) {
+      // Hardcode for now to answer any question. 
+      return !!question
+    }
+
+  async firstUpdated() {
     // This is used to skip the start.
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
@@ -1145,7 +1274,7 @@ export class Template extends LitElement implements AppTemplate {
       this.#conversationManager.initial(this.graph);
     }
     if (skipStart === 'true' && this.state === "anonymous" || this.state === "valid") {
-      this.#renderRuntime();
+      await this.#renderRuntime();
     }
   }
 }

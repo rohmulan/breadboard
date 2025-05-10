@@ -186,7 +186,7 @@ export const styles = css`
     line-height: var(--bb-grid-size-5);
   }
 
-  .activity-entry:last-of-type {
+  .activity-entry.blocker {
     min-height: var(--min-last-activity-height, 0);
   }
 

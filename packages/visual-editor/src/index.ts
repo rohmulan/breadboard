@@ -2759,9 +2759,7 @@ export class Main extends LitElement {
               actionEvt: BreadboardUI.Events.OverflowMenuActionEvent
             ) => {
               this.showBoardOverflowMenu = false;
-              const x = this.#boardOverflowMenuConfiguration?.x ?? 100;
-              const y = this.#boardOverflowMenuConfiguration?.y ?? 100;
-
+             
               if (!actionEvt.value) {
                 this.toast(
                   Strings.from("ERROR_GENERIC"),

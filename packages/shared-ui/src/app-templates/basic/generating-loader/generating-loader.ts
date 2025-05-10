@@ -48,7 +48,6 @@ export class GeneratingLoader extends LitElement {
   );
 
   render() {
-    console.log('rendering..');
     return html`
       <div class="main">
         <div class="header">

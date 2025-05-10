@@ -1,33 +1,50 @@
 import {
     GraphDescriptor,
   } from "@google-labs/breadboard";
-  import {gemini, LLMContent, GeminiErrorResponse, GeminiAPIOutputs} from "../gemini/gemini.js";
+  import {gemini, LLMContent, GeminiErrorResponse, GeminiAPIOutputs, TextCapabilityPart} from "../gemini/gemini.js";
 
 
+const INTRODUCTION_PROMPT = "Please introduce yourself.";
 
 export class ConversationManager {
     #chatHistory: LLMContent[] = [];
     #graphDescription: string = "";
 
-    initial(graph: GraphDescriptor) {
-        this.#graphDescription = (graph.metadata?.intent || graph.description)?? "";
+    initial(graph: GraphDescriptor | undefined | null) {
+        if (graph) {
+            this.#graphDescription = (graph.metadata?.intent || graph.description)?? "";
+        }
         this.#chatHistory = [];
+    }
+
+    // Introduction is not stored in the chat history. 
+    async introduceLLM() {
+        return await gemini([{role: "user", parts: [{text:INTRODUCTION_PROMPT}]}], this.#graphDescription);
     }
 
     async chatWithLLM() {
         const result = await gemini(this.#chatHistory, this.#graphDescription);
         if (result.error) {
             // error handling!!!
-            return generateLLMOutputEvent(result, this.#chatHistory.length);
+            return result;
         } else {
             // happy path;
             const output = result.candidates? result.candidates[0]?.content: undefined;
             if (output) {
                 this.#chatHistory.push(output);
-                return generateLLMOutputEvent(result, this.#chatHistory.length);
+                return result;
             }
-            return generateEmptyEvent();
+            return result;
         }
+    }
+
+    getChatHistory() {
+        return this.#chatHistory;
+    }
+
+    getLatestUserContent() {
+        const userChat = this.#chatHistory.filter((chat) => chat.role === "user");
+        return ((userChat.at(-1)?.parts[0]) as TextCapabilityPart).text;
     }
 
     acceptUserQuery(userInput: string): ManualEvent {

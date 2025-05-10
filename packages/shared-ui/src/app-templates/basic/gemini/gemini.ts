@@ -136,7 +136,7 @@ export async function gemini(
   userInputContext: LLMContent[],
   boardDescription: string
 ): Promise<GeminiAPIOutputs> {
-  console.log("Start fetching from gemini API");
+  // console.log("Start fetching from gemini API");
   //Manually build userInputContext for testing purpose
   // userInputContext = [
   //   {
@@ -188,18 +188,18 @@ export async function gemini(
     console.dir(err);
     return { error: err };
   } else {
-    console.log("Complete fetching from gemini API, status:", data.status);
+    // console.log("Complete fetching from gemini API, status:", data.status);
     // Maybe define a response data type GeminiOutput to parse the response?
     const res = (await data.json()) as GeminiAPIOutputs;
-    console.dir(res);
-    console.log("Print candidate to see result...");
+    // console.dir(res);
+    // console.log("Print candidate to see result...");
     const candidate = res.candidates?.at(0);
     if (!candidate) {
       return { error: {message: "Unable to get a good response from Gemini"}};
     }
     if ("content" in candidate) {
-      console.log("Printing content from the Gemini response");
-      console.dir(candidate.content?.parts[0]);
+      // console.log("Printing content from the Gemini response");
+      // console.dir(candidate.content?.parts[0]);
     }
     return { candidates: res.candidates };
   }
