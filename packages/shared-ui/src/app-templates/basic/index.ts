@@ -58,7 +58,7 @@ import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { LLMContent, NodeValue, OutputValues } from "@breadboard-ai/types";
 import { isLLMContentArrayBehavior, isLLMContentBehavior } from "../../utils";
 import { extractError } from "../shared/utils/utils";
-import { AssetShelf, BoardConversation } from "../../elements/elements";
+import { AssetShelf, BoardConversation, tokenVendorContext } from "../../elements/elements";
 import { SigninState } from "../../utils/signin-adapter";
 
 /** Included so the app can be standalone */
@@ -85,6 +85,8 @@ import { icons } from "../../styles/icons";
 import { GeminiAPIOutputs, FunctionCallCapabilityPart, LLMContent as GeminiLLMContent, TextCapabilityPart } from "./gemini/gemini";
 import { InputStageResult } from "../../../../breadboard/dist/src/run";
 import { ConversationElement } from "../../elements/board-conversation/board-conversation";
+import { consume } from "@lit/context";
+import { TokenVendor } from "@breadboard-ai/connection-client";
 
 @customElement("app-basic")
 export class Template extends LitElement implements AppTemplate {
@@ -179,6 +181,10 @@ export class Template extends LitElement implements AppTemplate {
 
   @query('bb-board-conversation')
   accessor boardConversation!: BoardConversation;
+
+  @consume({ context: tokenVendorContext })
+  accessor tokenVendor!: TokenVendor;
+  
 
   #allowedMimeTypes: string | null = null;
   #conversationManager = new ConversationManager();
@@ -737,7 +743,9 @@ export class Template extends LitElement implements AppTemplate {
         }
       }
       const oldTopGraphResult = changedProperties.get("topGraphResult") as TopGraphRunResult;
-      if (oldTopGraphResult.status !== this.topGraphResult?.status 
+      if (this.topGraphResult
+          && oldTopGraphResult
+          && oldTopGraphResult.status !== this.topGraphResult?.status 
           && this.topGraphResult?.status === "stopped"
           && this.topGraphResult?.log
           && this.topGraphResult?.log.length > 0) {
@@ -1028,7 +1036,9 @@ export class Template extends LitElement implements AppTemplate {
     if (llmOutput) {
       if (llmOutput.error) {
         // error handling!
-
+        this.conversationList.push({
+          model: this.#renderManualLLmOutput(llmOutput),
+        })
       } else {
         const llmContent = llmOutput.candidates ? llmOutput.candidates[0].content : undefined;
         if (this.#ifNeedToTriggerFlow(llmContent)) {
@@ -1086,7 +1096,22 @@ export class Template extends LitElement implements AppTemplate {
     this.currentRunEvents = [];
     this.conversationList = [];
     this.currentConversation = undefined;
-    this.#conversationManager.initial(this.graph);
+    this.#conversationManager.initial(this.graph, this.#getSigninToken());
+  }
+  
+  #getSigninToken() {
+    const token = this.tokenVendor.getToken("$sign-in");
+    const { state } = token;
+    if (state === "signedout") {
+      this.state = "signedout";
+      return "";
+    }
+    const { grant } = token;
+    if (!grant) {
+      this.state = "invalid";
+      return "";
+    }
+    return grant.access_token;
   }
 
   #dispatchLLMContent() {
@@ -1271,7 +1296,7 @@ export class Template extends LitElement implements AppTemplate {
     const urlParams = new URLSearchParams(queryString);
     const skipStart = urlParams.get('start') ?? '';
     if (this.graph) {
-      this.#conversationManager.initial(this.graph);
+      this.#conversationManager.initial(this.graph, this.#getSigninToken());
     }
     if (skipStart === 'true' && this.state === "anonymous" || this.state === "valid") {
       await this.#renderRuntime();

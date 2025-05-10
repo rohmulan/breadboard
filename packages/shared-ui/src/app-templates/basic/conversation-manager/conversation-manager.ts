@@ -9,23 +9,28 @@ const INTRODUCTION_PROMPT = "Please introduce yourself.";
 export class ConversationManager {
     #chatHistory: LLMContent[] = [];
     #graphDescription: string = "";
+    #accessToken = "";
 
-    initial(graph: GraphDescriptor | undefined | null) {
+    initial(graph: GraphDescriptor | undefined | null, accessToken?: string) {
         if (graph) {
             this.#graphDescription = (graph.metadata?.intent || graph.description)?? "";
         }
         this.#chatHistory = [];
+        if (accessToken) {
+            this.#accessToken = accessToken;
+        }
     }
 
     // Introduction is not stored in the chat history. 
     async introduceLLM() {
-        return await gemini([{role: "user", parts: [{text:INTRODUCTION_PROMPT}]}], this.#graphDescription);
+        return await gemini([{role: "user", parts: [{text:INTRODUCTION_PROMPT}]}], this.#graphDescription, this.#accessToken);
     }
 
     async chatWithLLM() {
-        const result = await gemini(this.#chatHistory, this.#graphDescription);
+        const result = await gemini(this.#chatHistory, this.#graphDescription, this.#accessToken);
         if (result.error) {
             // error handling!!!
+            console.log(result.error);
             return result;
         } else {
             // happy path;

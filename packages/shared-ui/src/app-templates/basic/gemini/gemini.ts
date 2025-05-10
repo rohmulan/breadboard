@@ -129,12 +129,13 @@ function endpointURL(model?: string) {
   if (!model) {
     model = "gemini-2.0-flash";
   }
-  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=AIzaSyDdyPzV1XXID29vpefaybtUwTeK5wSXnuY`;
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 }
 
 export async function gemini(
   userInputContext: LLMContent[],
-  boardDescription: string
+  boardDescription: string,
+  accessToken: string,
 ): Promise<GeminiAPIOutputs> {
   // console.log("Start fetching from gemini API");
   //Manually build userInputContext for testing purpose
@@ -164,16 +165,9 @@ export async function gemini(
   //       ],
   //     },
   // ];
-
-  // User Oath token in header to call Gemini instead of api key
-  //   headers: {
-  //     Authorization: `Bearer ${accessToken}`,
-  //   },
-
   const requestInit: RequestInit = {
     method: "POST",
-    // headers: { Authorization: `Bearer ${accessToken}` },
-    headers: {},
+    headers: { Authorization: `Bearer ${accessToken}` },
   };
   requestInit.body = JSON.stringify(
     consturctGeminiBody(userInputContext, boardDescription)
