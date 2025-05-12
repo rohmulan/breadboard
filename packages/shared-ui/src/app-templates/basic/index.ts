@@ -282,10 +282,7 @@ export class Template extends LitElement implements AppTemplate {
 }
 
 #getLoadingMessage () {
-  if (this.topGraphResult?.status === 'running') {
-    return this.topGraphResult?.currentNode?.descriptor?.metadata?.title ?? '';
-  }
-  if (this.waitingLLMOutput) {
+  if ((this.topGraphResult?.status === 'running' && this.topGraphResult?.currentNode?.descriptor?.metadata?.title) || this.waitingLLMOutput) {
     return 'Generating...';
   }
   return ''

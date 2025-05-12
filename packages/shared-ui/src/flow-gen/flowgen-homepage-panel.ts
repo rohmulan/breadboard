@@ -298,7 +298,7 @@ export class FlowgenHomepagePanel extends LitElement {
 
   #renderInput() {
     const isGenerating = this.#state.status === "generating";
-    if (isGenerating) return this.#renderAgentspaceLoading();
+    if (this.agentspaceFlowContent.isIframe) return this.#renderAgentspaceLoading();
     return html`
       <div id="gradient-border-container">
         <bb-expanding-textarea
