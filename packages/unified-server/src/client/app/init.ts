@@ -54,6 +54,10 @@ const secondaryBackgroundColorDark = getGlobalColor("--bb-ui-800");
 const primaryButtonColorDark = getGlobalColor("--bb-ui-300");
 const primaryButtonColorTextDark = getGlobalColor("--bb-neutral-900");
 const bubbleBackgroundColorDark = "red";
+const primaryButtonColorDisabled = getGlobalColor("--bb-neutral-200");
+const primaryButtonColorTextDisabled = getGlobalColor("--bb-neutral-500");
+const primaryButtonColorDisabledDark = getGlobalColor("--bb-neutral-200");
+const primaryButtonColorTextDisabledDark = getGlobalColor("--bb-neutral-500");
 
 async function fetchFlow() {
   try {
@@ -200,6 +204,8 @@ function createDefaultTheme(): AppTheme {
     primaryButtonColor: primaryButtonColor,
     primaryButtonColorText: primaryButtonColorText,
     bubbleBackgroundColor: bubbleBackgroundColor,
+    primaryButtonColorDisabled: primaryButtonColorDisabled,
+    primaryButtonColorTextDisabled: primaryButtonColorTextDisabled,
     secondaryButtonColor:"#f8fafd",
     secondaryButtonColorText: "#747775",
     primaryBorderColor: "rgb(11, 87, 208)",
@@ -223,6 +229,8 @@ function createDarkTheme(): AppTheme {
     primaryButtonColor: primaryButtonColorDark,
     primaryButtonColorText: primaryButtonColorTextDark,
     bubbleBackgroundColor: bubbleBackgroundColorDark,
+    primaryButtonColorDisabled: primaryButtonColorDisabledDark,
+    primaryButtonColorTextDisabled: primaryButtonColorTextDisabledDark,
     secondaryButtonColor:"#333537",
     secondaryButtonColorText: "#8e918f",
     primaryBorderColor: "rgb(11, 87, 208)",
