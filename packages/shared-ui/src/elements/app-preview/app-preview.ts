@@ -401,7 +401,7 @@ export class AppPreview extends LitElement {
     };
 
     if (changedProperties.has("graph") || changedProperties.has("themeHash")) {
-      setDarkTheme();
+      setDefaultTheme();
       this.#applyThemeToTemplate();
     }
 
