@@ -1156,7 +1156,7 @@ export class EditorControls extends LitElement {
         : nothing}
     </div>`;
 
-    const shelf = html`<div id="shelf">
+    const shelf = html`<div id="shelf" style="display: none">
       <bb-flowgen-editor-input
         .currentGraph=${this.graph.raw()}
         @pointerdown=${(evt: PointerEvent) => {
