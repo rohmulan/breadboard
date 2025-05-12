@@ -298,7 +298,7 @@ export class FlowgenHomepagePanel extends LitElement {
 
   #renderInput() {
     const isGenerating = this.#state.status === "generating";
-    if (this.agentspaceFlowContent.isIframe) return this.#renderAgentspaceLoading();
+    if (isGenerating) return this.#renderAgentspaceLoading();
     return html`
       <div id="gradient-border-container">
         <bb-expanding-textarea
@@ -348,6 +348,7 @@ export class FlowgenHomepagePanel extends LitElement {
         this.style.setProperty('--display-border-container', 'none');
         this.style.setProperty('--display-chips', 'none');
       } else {
+        this.#state = { status: "generating" };
         this.dispatchEvent(new GraphBoardServerBlankBoardEventForAgentspace());
       }
     }
