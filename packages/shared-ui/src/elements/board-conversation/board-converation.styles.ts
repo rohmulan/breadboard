@@ -12,13 +12,13 @@ export const styles = css`
 
   :host {
     display: block;
-    background: var(--bb-neutral-0);
+
     position: relative;
 
     --user-input-padding-left: var(--bb-grid-size-3);
     --output-value-padding-x: var(--bb-grid-size-2);
     --output-value-padding-y: var(--bb-grid-size-2);
-    --color-bubble-wrapper: #e9eef6;
+ 
 
 
 
@@ -114,7 +114,7 @@ export const styles = css`
         min-height: 32px;
         display: inline-flex;
         align-items: center;
-        background: var(--color-bubble-wrapper);
+        background: var(--bubble-background-color);
         padding: 8px 16px;
         border-radius: 26px 4px 26px 26px;
 

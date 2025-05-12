@@ -55,7 +55,7 @@ const primaryTextColorDark = getGlobalColor("--bb-neutral-900");
 const secondaryBackgroundColorDark = getGlobalColor("--bb-ui-800");
 const primaryButtonColorDark = getGlobalColor("--bb-ui-300");
 const primaryButtonColorTextDark = getGlobalColor("--bb-neutral-900");
-const bubbleBackgroundColorDark = "red";
+const bubbleBackgroundColorDark = "rgb(40, 42, 44)";
 const primaryButtonColorDisabledDark = getGlobalColor("--bb-neutral-200");
 const primaryButtonColorTextDisabledDark = getGlobalColor("--bb-neutral-500");
 
@@ -192,7 +192,7 @@ export class AppPreview extends LitElement {
       bubbleBackgroundColor: bubbleBackgroundColorDark,
       secondaryButtonColor:"#333537",
       secondaryButtonColorText: "#8e918f",
-      primaryBorderColor: "rgb(11, 87, 208)",
+      primaryBorderColor: "rgb(168, 199, 250)",
       splashScreen: {
         storedData: {
           handle: "/images/app/generic-flow.jpg",
@@ -401,7 +401,7 @@ export class AppPreview extends LitElement {
     };
 
     if (changedProperties.has("graph") || changedProperties.has("themeHash")) {
-      setDefaultTheme();
+      setDarkTheme();
       this.#applyThemeToTemplate();
     }
 

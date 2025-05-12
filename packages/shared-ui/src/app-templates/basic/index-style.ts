@@ -593,7 +593,7 @@ export default  css`
             flex: 1;
             overflow: auto;
        
-            color: var(----primary-color);
+            color: var(--text-color);
 
             & p {
               display: flex;
@@ -615,7 +615,7 @@ export default  css`
               resize: none;
               background: transparent;
               padding: 8px 6px;
-              color: var(----primary-color);
+              color: var(--text-color);
               font: 400 var(--bb-title-medium) /
                 var(--bb-title-line-height-medium) var(--bb-font-family);
               border: none;
