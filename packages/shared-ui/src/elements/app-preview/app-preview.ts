@@ -148,9 +148,16 @@ export class AppPreview extends LitElement {
 
   #loadingTemplate = false;
   #appTemplate: AppTemplate | null = null;
+  #darkMode = false;
+
   #template = html`<div class="loading">
     <p class="loading-message">Loading...</p>
   </div>`;
+
+  constructor() {
+    super();
+    this.#checkDarkMode();
+  }
 
   #createDefaultTheme(): AppTheme {
     return {
@@ -315,6 +322,12 @@ export class AppPreview extends LitElement {
     }
   }
 
+  #checkDarkMode() {
+    if(globalThis.localStorage.getItem("app-theme") === "dark") {
+      this.#darkMode = true;
+    }
+  }
+
   #loadAppTemplate(theme: string) {
     switch (theme) {
       case "basic":
@@ -388,6 +401,7 @@ export class AppPreview extends LitElement {
       }
     }
 
+
     const setDefaultTheme = () => {
       this.theme = this.#createDefaultTheme();
       this.appTitle = this.graph?.title ?? Strings.from("LABEL_UNTITLED_APP");
@@ -401,7 +415,11 @@ export class AppPreview extends LitElement {
     };
 
     if (changedProperties.has("graph") || changedProperties.has("themeHash")) {
-      setDefaultTheme();
+      if(this.#darkMode) {
+        setDarkTheme();
+      } else {
+        setDefaultTheme();
+      }
       this.#applyThemeToTemplate();
     }
 

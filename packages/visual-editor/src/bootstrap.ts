@@ -77,6 +77,13 @@ function bootstrap(args: BootstrapArguments = {}) {
     document.documentElement.classList.add("dark-theme");
   }
 
+  if (params.has("app-theme") && params.get("app-theme") === "dark") {
+    globalThis.localStorage.setItem("app-theme", "dark");
+  } else {
+    globalThis.localStorage.setItem("app-theme", "light");
+  }
+
+
   const esKey = "extended-settings";
   if (params.has(esKey)) {
     const keyVal = params.get(esKey);
