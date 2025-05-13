@@ -1137,15 +1137,10 @@ export class Template extends LitElement implements AppTemplate {
     const currentItem = topGraphResult.log.at(-1);
     if (currentItem?.type === "error") {
       activityContents = html`
-        <details class="error">
-          <summary>
-            <h1>We are sorry, but there was a problem with this flow.</h1>
-            <p>Tap for more details</p>
-          </summary>
-          <div>
-            <p>${extractError(currentItem.error)}</p>
-          </div>
-        </details>
+        <divclass="error">
+          <p>We are sorry, but there was a problem with this flow.</p>
+          <p>${extractError(currentItem.error)}</p>
+        </div>
       `;
     } else if (
       currentItem?.type === "edge" &&
