@@ -83,25 +83,14 @@ export class BoardDetailsOverlay extends LitElement {
       width: 100%;
       display: flex;
       align-items: center;
-      font: 400 var(--bb-title-medium) / var(--bb-title-line-height-medium)
-        var(--bb-font-family);
-      padding: var(--bb-grid-size-3) var(--bb-grid-size-4);
+      font: 400 var(--bb-title-medium) / var(--bb-title-line-height-medium);
+      padding: var(--bb-grid-size-6) var(--bb-grid-size-4) 0;
       margin: 0;
       text-align: left;
-      border-bottom: 1px solid var(--bb-neutral-300);
       user-select: none;
       cursor: pointer;
     }
 
-    h1::before {
-      content: "";
-      display: block;
-      width: 20px;
-      height: 20px;
-      background: transparent var(--bb-icon-edit) center center / 20px 20px
-        no-repeat;
-      margin-right: var(--bb-grid-size-2);
-    }
 
     h1 span {
       flex: 1;
@@ -115,10 +104,12 @@ export class BoardDetailsOverlay extends LitElement {
     }
 
     #wrapper {
+      font-family: "Google Sans", roboto, sans-serif;
       min-width: 410px;
       width: max(350px, 450px);
-      min-height: 250px;
-      height: 288px;
+      min-height: 400px;
+      max-height: 600px;
+      height: 400px;
       display: flex;
       flex-direction: column;
       overflow: auto;
@@ -136,54 +127,57 @@ export class BoardDetailsOverlay extends LitElement {
     }
 
     #buttons {
-      height: var(--bb-grid-size-10);
-      padding: 0 var(--bb-grid-size-4);
-      border-top: 1px solid var(--bb-neutral-200);
       display: flex;
       align-items: center;
+      justify-content: flex-end;
     }
 
     #buttons > div {
       display: flex;
       flex: 0 0 auto;
+      margin: var(--bb-grid-size-6) var(--bb-grid-size-4);
     }
 
     #cancel {
       background: transparent;
       border: none;
-      font: 400 var(--bb-title-small) / var(--bb-title-line-height-small)
-        var(--bb-font-family);
-      color: var(--bb-neutral-500);
-      margin-right: var(--bb-grid-size-2);
+      border-radius: var(--bb-grid-size-12);
+      font: 400 var(--bb-title-small) / var(--bb-title-line-height-small);
+      color: var(--primary-button-color);
+      margin-right: var(--bb-grid-size-4);
+      padding: 0 var(--bb-grid-size-4);
+
+      &:hover {
+        background-color: var(--bb-neutral-50);
+      }
     }
 
     #update {
-      background: var(--bb-ui-500);
+      background: var(--primary-button-color);
       border: none;
-      font: 400 var(--bb-label-medium) / var(--bb-label-line-height-medium)
-        var(--bb-font-family);
-      color: var(--bb-neutral-0);
+      font: 400 var(--bb-title-x-small) / var(--bb-title-line-height-small);
+      color: var(--primary-button-color-text, var(--bb-ui-700));
       padding: 0 var(--bb-grid-size-4);
-      height: var(--bb-grid-size-6);
+      height: var(--bb-grid-size-10);
       border-radius: var(--bb-grid-size-12);
       display: flex;
       align-items: center;
       cursor: pointer;
       transition: background-color 0.3s cubic-bezier(0, 0, 0.3, 1);
+      opacity: 0.85;
     }
 
     #update:hover,
     #update:focus {
-      background: var(--bb-ui-600);
+      opacity: 1;
       transition-duration: 0.1s;
     }
 
     form {
       display: grid;
-      grid-template-columns: 90px auto;
       grid-template-rows: var(--bb-grid-size-7);
       row-gap: var(--bb-grid-size-2);
-      padding: 0 0 var(--bb-grid-size-4) 0;
+      padding: 0 0 var(--bb-grid-size-2) 0;
       column-gap: var(--bb-grid-size-4);
     }
 
@@ -198,8 +192,7 @@ export class BoardDetailsOverlay extends LitElement {
     .additional-items label[for="is-tool"],
     .additional-items label[for="is-component"],
     .additional-items label[for="is-exported"] {
-      font: 400 var(--bb-body-x-small) / var(--bb-body-line-height-x-small)
-        var(--bb-font-family);
+      font: 400 var(--bb-body-small) / var(--bb-body-line-height-small);
       color: var(--bb-neutral-600);
       margin: 0 0 0 var(--bb-grid-size-2);
       display: flex;
@@ -216,7 +209,7 @@ export class BoardDetailsOverlay extends LitElement {
     select,
     textarea {
       padding: var(--bb-grid-size-2) var(--bb-grid-size-3);
-      font: 400 var(--bb-body-small) / var(--bb-body-line-height-small)
+      font: 400 var(--bb-body-medium) / var(--bb-body-line-height-medium)
         var(--bb-font-family);
       border: 1px solid var(--bb-neutral-300);
       border-radius: var(--bb-grid-size);
@@ -230,8 +223,7 @@ export class BoardDetailsOverlay extends LitElement {
     }
 
     label {
-      font: 400 var(--bb-label-medium) / var(--bb-label-line-height-medium)
-        var(--bb-font-family);
+      font: 400 var(--bb-label-small) / var(--bb-label-line-height-small);
     }
 
     label[for="version"],
@@ -587,20 +579,20 @@ export class BoardDetailsOverlay extends LitElement {
         <div id="buttons">
           <div>
             <button
-              id="update"
-              @click=${() => {
-                this.processData();
-              }}
-            >
-              Update
-            </button>
-            <button
               id="cancel"
               @click=${() => {
                 this.dispatchEvent(new OverlayDismissedEvent());
               }}
             >
               Cancel
+            </button>
+            <button
+              id="update"
+              @click=${() => {
+                this.processData();
+              }}
+            >
+              Update
             </button>
           </div>
         </div>
