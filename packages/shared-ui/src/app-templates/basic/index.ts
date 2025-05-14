@@ -1320,10 +1320,10 @@ export class Template extends LitElement implements AppTemplate {
       return anyTrue && titleMatch;
     }
 
-    #LLMCanProvideAnswer(question: string) {
+    #LLMCanProvideAnswer(question?: string) {
       // Hardcode for now to answer any question. 
-      if (question.includes('Enter User Input')) {
-        return true;
+      if (question) {
+        return false;
       }
       return false;
     }
