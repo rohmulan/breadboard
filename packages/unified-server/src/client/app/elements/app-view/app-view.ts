@@ -46,7 +46,14 @@ export class AppView extends LitElement {
       /** Mobile for now */
       max-width: 760px;
       max-height: 90vh;
+
+
+
     }
+      bb-connection-authorize-view.auto-width {
+        width: auto;
+      }
+
   `;
 
   @provide({ context: BreadboardUIContext.environmentContext })
@@ -228,6 +235,20 @@ export class AppView extends LitElement {
     if (!this.flow || !this.#runner) {
       return html`404 not found`;
     }
+
+    if (
+      this.#signInAdapter.state !== "anonymous" &&
+      this.#signInAdapter.state !== "valid"
+    ) {
+      return html`<bb-connection-authorize-view
+        class="auto-width"
+        .adapter=${this.#signInAdapter}
+        @bbauthorize=${async () => {
+          window.location.reload();
+        }}
+      ></bb-connection-authorize-view>`;
+    }
+
 
     const run = this.#runner.runObserver.runs().then((runs) => {
       if (!this.flow || !this.#runner) {
