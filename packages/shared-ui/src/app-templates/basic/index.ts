@@ -1115,20 +1115,24 @@ export class Template extends LitElement implements AppTemplate {
     return false;
   } 
 
-  #reset() {
+  async #reset() {
     this.eventsQueue = [];
     this.currentRunEvents = [];
     this.conversationList = [];
     this.currentConversation = undefined;
-    this.#conversationManager.initial(this.graph, this.#getSigninToken());
+    this.#conversationManager.initial(this.graph, await this.#getSigninToken());
   }
   
-  #getSigninToken() {
+  async #getSigninToken() {
     const token = this.tokenVendor.getToken("$sign-in");
     const { state } = token;
+
     if (state === "signedout") {
       this.state = "signedout";
       return "";
+    }
+    if (state === "expired") {
+      await token.refresh();
     }
     const { grant } = token;
     if (!grant) {
@@ -1165,7 +1169,7 @@ export class Template extends LitElement implements AppTemplate {
     if (currentItem?.type === "error") {
       activityContents = html`
         <divclass="error">
-          <p>We are sorry, but there was a problem with this flow.</p>
+          <p>We are sorry, but there was a problem with this agent.</p>
           <p>${extractError(currentItem.error)}</p>
         </div>
       `;
@@ -1318,7 +1322,7 @@ export class Template extends LitElement implements AppTemplate {
     const urlParams = new URLSearchParams(queryString);
     const skipStart = urlParams.get('start') ?? '';
     if (this.graph) {
-      this.#conversationManager.initial(this.graph, this.#getSigninToken());
+      this.#conversationManager.initial(this.graph, await this.#getSigninToken());
     }
     if (skipStart === 'true' && this.state === "anonymous" || this.state === "valid") {
       await this.#renderRuntime();

@@ -236,6 +236,7 @@ export class AppView extends LitElement {
       return html`404 not found`;
     }
 
+
     if (
       this.#signInAdapter.state !== "anonymous" &&
       this.#signInAdapter.state !== "valid"
