@@ -2258,7 +2258,9 @@ export class Main extends LitElement {
     const parentOrigin = urlParams.get('parentOrigin') ?? '';
     const isInsideAgentspaceIframe = !!iframe || !!instructions || !!flowGoal || !!flowName;
     const noCodeAgentId = urlParams.get('noCodeAgentId') ?? '';
-    const engineName = urlParams.get('engineName') ?? '';
+    // TODO(jialehong): change to get from engineName.
+    //const engineName = urlParams.get('engineName') ?? '';
+    const engineName = 'projects/862721868538/locations/global/collections/default_collection/engines/teamfood-v11_1720671063545';
     this.style.setProperty('--header-height', '0');
     
 
