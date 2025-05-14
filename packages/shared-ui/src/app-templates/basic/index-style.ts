@@ -655,7 +655,7 @@ export default  css`
               font-size: 0;
               border: none;
               border-radius: 50%;
-              background-color: var(--secondary-button-color); //unset;
+              background-color: var(--secondary-button-color);
 
               --transition-properties: opacity;
               transition: var(--transition);
@@ -680,6 +680,10 @@ export default  css`
 
             & #continue {
               background: var(--secondary-button-color) var(--bb-icon-send) center center / 20px 20px no-repeat;
+            }
+
+            & #reset {
+              background: var(--secondary-button-color) var(--bb-icon-restart-alt) center center / 24px 24px no-repeat;
             }
 
           & .search-button,
