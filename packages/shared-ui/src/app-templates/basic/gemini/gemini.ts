@@ -209,16 +209,6 @@ function consturctGeminiBody(
         {
           name: "execute_flow",
           description: `Executes a specific flow to perform an action based on user input. ${boardDescription || ""}`,
-          parameters: {
-            type: "object",
-            properties: {
-              flow_user_input: {
-                type: "string",
-                description: "The flow input.",
-              },
-            },
-            required: ["flow_user_input"],
-          },
         },
       ],
     },
