@@ -51,7 +51,7 @@ export class MultiOutput extends LitElement {
           var(--font-family, var(--bb-font-family));
         color: var(--bb-neutral-900);
 
-        padding: 0 var(--multi-output-value-padding-x, var(--bb-grid-size-3));
+        // padding: 0 var(--multi-output-value-padding-x, var(--bb-grid-size-3));
 
         white-space: normal;
         border-radius: initial;

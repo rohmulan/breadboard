@@ -756,9 +756,37 @@ export class Template extends LitElement implements AppTemplate {
           && this.topGraphResult.status !== "stopped") {
           const currentItem = this.topGraphResult.log.at(-1);
           let lastOutput = null;
+          // When edge && paused, it means we need user inputs.
           if ( currentItem?.type === "edge" &&
                 this.topGraphResult.status === "paused") {
-                // In this case, engine is waiting for user input.
+                const props = Object.entries(currentItem.schema?.properties ?? {});
+                // This is the case, in official Opal UI, they render the description above the user-input, which we need
+                // to manual add to conversations as well.
+                  if (props.length > 0 && currentItem.descriptor?.type === "input") {
+                    const anyValue = props.find((prop) => {
+                      if (prop && prop[1].description) {
+                        return true;
+                      }
+                      return false;
+                    });
+                    if (anyValue) {
+                      if (this.currentConversation) {
+                        this.conversationList.push(this.currentConversation);
+                      }
+                      if (this.#LLMCanProvideAnswer(anyValue[1].description ?? "")) {
+                        setTimeout(() => {
+                          this.#dispatchLLMContent();
+                        });
+                      } else {
+                        this.currentConversation = {
+                          model: html `
+                            <p>${anyValue[1].description}</p>
+                          `
+                        };
+                      }
+                      return;
+                    }
+                  }
                   for (let i = this.topGraphResult.log.length - 1; i >= 0; i--) {
                     const result = this.topGraphResult.log[i];
                     if (result.type === "edge" && result.descriptor?.type === "output") {
@@ -1001,7 +1029,6 @@ export class Template extends LitElement implements AppTemplate {
 
   // Occurs when the flow is not started yet or alreayd end.
   async #processMessage() {
-    console.log('Processing the messsage!!!');
     if (!this.#inputRef.value) {
       return;
     }
@@ -1260,7 +1287,7 @@ export class Template extends LitElement implements AppTemplate {
       }
     }
 
-    #hideOutput(output: EdgeLogEntry | null):boolean {
+    #hideOutput(output: EdgeLogEntry | null): boolean {
       if (!output || !output.value || !output.schema) return false;
       const schema = output.schema;
       const titleMatch = output.descriptor?.metadata?.title === "User Input";
@@ -1279,7 +1306,10 @@ export class Template extends LitElement implements AppTemplate {
 
     #LLMCanProvideAnswer(question: string) {
       // Hardcode for now to answer any question. 
-      return !!question
+      if (question.includes('Enter User Input')) {
+        return true;
+      }
+      return false;
     }
 
   async firstUpdated() {

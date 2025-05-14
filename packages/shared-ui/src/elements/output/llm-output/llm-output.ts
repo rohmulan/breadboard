@@ -159,7 +159,7 @@ export class LLMOutput extends LitElement {
         var(--bb-font-family);
       color: var(--bb-neutral-900);
 
-      // padding: var(--output-value-padding-y, 0) var(--output-value-padding-x, 0);
+      padding: var(--output-value-padding-y, 0) var(--output-value-padding-x, 0);
       padding-block: var(--output-value-padding-y, 0);
 
 

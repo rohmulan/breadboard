@@ -13,7 +13,7 @@ export class ConversationManager {
 
     initial(graph: GraphDescriptor | undefined | null, accessToken?: string) {
         if (graph) {
-            this.#graphDescription = (graph.metadata?.intent || graph.description)?? "";
+            this.#graphDescription = (graph.description || graph.metadata?.intent)?? "";
         }
         this.#chatHistory = [];
         if (accessToken) {
@@ -41,6 +41,10 @@ export class ConversationManager {
             }
             return result;
         }
+    }
+
+    async generateTheInput(question: string) {
+        console.log(question);
     }
 
     getChatHistory() {

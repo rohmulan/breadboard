@@ -34,6 +34,18 @@ export default css`
     margin-top: 16px;
   }
 
+  .text-container {
+    color: #747775;
+  }
+
+  .text-container.fade-in {
+    animation: fadeIn 0.25s linear forwards;
+  }
+
+  .text-container.fade-out {
+    animation: fadeOut 0.25s linear;
+  }
+
   .first-line.skeleton-loader {
     width: 100%;
   }

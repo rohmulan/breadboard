@@ -379,17 +379,7 @@ export default  css`
 
 
       & bb-multi-output {
-        --output-value-padding-x: var(--bb-grid-size-4);
-        --output-value-padding-y: var(--bb-grid-size-4);
-        --output-border-radius: var(--bb-grid-size-4);
-        --output-font: 400 var(--font-style, normal)
-          var(--bb-title-large) / var(--bb-title-line-height-large)
-          var(--font-family, var(--bb-font-family));
-        --output-string-width: 95%;
-        --output-string-margin-bottom-y: var(--bb-grid-size-3);
-        --output-margin-bottom: var(--bb-grid-size-4);
-        --output-background-color: var(--bb-neutral-0);
-        --multi-output-value-padding-x: 0;
+
 
 
         animation: fadeIn 0.6s cubic-bezier(0, 0, 0.3, 1) forwards;
