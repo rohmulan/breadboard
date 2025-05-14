@@ -2253,14 +2253,14 @@ export class Main extends LitElement {
     const urlParams = new URLSearchParams(decoded);
     const instructions = urlParams.get('instructions') ?? '';
     const flowName = urlParams.get('name') ?? '';
+    const iframe = urlParams.get('iframe');
     const flowGoal = urlParams.get('goal') ?? '';
     const parentOrigin = urlParams.get('parentOrigin') ?? '';
-    const isInsideAgentspaceIframe = true;
+    const isInsideAgentspaceIframe = !!iframe || !!instructions || !!flowGoal || !!flowName;
     const noCodeAgentId = urlParams.get('noCodeAgentId') ?? '';
     const engineName = urlParams.get('engineName') ?? '';
-    if (isInsideAgentspaceIframe) {
-      this.style.setProperty('--header-height', '0');
-    }
+    this.style.setProperty('--header-height', '0');
+    
 
     this.agentspaceUrl = {
       hideHeader: isInsideAgentspaceIframe,
