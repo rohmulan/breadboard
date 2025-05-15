@@ -1042,11 +1042,6 @@ export class EditorControls extends LitElement {
                   icon: "upload",
                 },
                 {
-                  id: "gdrive",
-                  title: "Google Drive",
-                  icon: "drive",
-                },
-                {
                   id: "youtube",
                   title: "YouTube",
                   icon: "video_youtube",
