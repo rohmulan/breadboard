@@ -28,7 +28,7 @@ export class AddAssetButton extends LitElement {
     upload: true,
     youtube: true,
     drawable: true,
-    gdrive: true,
+    gdrive: false,
   };
 
   @property()
