@@ -4,7 +4,7 @@ import {
   import {gemini, LLMContent, GeminiErrorResponse, GeminiAPIOutputs, TextCapabilityPart} from "../gemini/gemini.js";
 
 
-const INTRODUCTION_PROMPT = "Please introduce yourself.";
+const INTRODUCTION_PROMPT = "Introduce yourself and start the conversation.";
 
 export class ConversationManager {
     #chatHistory: LLMContent[] = [];

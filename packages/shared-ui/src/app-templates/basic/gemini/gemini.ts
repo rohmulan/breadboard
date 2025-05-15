@@ -208,7 +208,7 @@ function consturctGeminiBody(
       function_declarations: [
         {
           name: "execute_flow",
-          description: `Executes a specific flow to perform an action based on user input. ${boardDescription || ""}`,
+          description: `This tool is created by user to execute a specific action. The description is '${boardDescription || ""}'. Read the description and understand it. If user express any intent related the description, execute the tool directly.`,
         },
       ],
     },
