@@ -45,10 +45,6 @@ export class AppView extends LitElement {
 
       /** Mobile for now */
       max-width: 760px;
-      max-height: 90vh;
-
-
-
     }
       bb-connection-authorize-view.auto-width {
         width: auto;
