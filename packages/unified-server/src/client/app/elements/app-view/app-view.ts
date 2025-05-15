@@ -262,7 +262,7 @@ export class AppView extends LitElement {
         this.#runner.topGraphObserver.current() ??
         TopGraphObserver.entryResult(this.flow);
       appTemplate.eventPosition = run?.events.length ?? 0;
-      appTemplate.showGDrive = this.#signInAdapter.state === "valid";
+      appTemplate.showGDrive = false;
       appTemplate.addEventListener("bbsigninrequested", async () => {
         const url = await this.#signInAdapter.getSigninUrl();
 

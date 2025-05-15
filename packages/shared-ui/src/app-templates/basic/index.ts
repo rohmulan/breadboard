@@ -584,7 +584,7 @@ export class Template extends LitElement implements AppTemplate {
               supportedActions.upload = true;
               supportedActions.youtube = true;
               supportedActions.drawable = true;
-              supportedActions.gdrive = true;
+              supportedActions.gdrive = false;
               break propSearch;
             }
           }
