@@ -1120,9 +1120,13 @@ export class Template extends LitElement implements AppTemplate {
     if (!output) {
       return false;
     }
-    if (output.parts && output.parts[0]) {
-      const part = output.parts[0] as FunctionCallCapabilityPart;
-      return !!part.functionCall;
+    if (output.parts && output.parts.length > 0) {
+      const anyTrue = output.parts.find((part) => {
+        if (!!((part as FunctionCallCapabilityPart).functionCall)) {
+          return true;
+        }
+      });
+      return !!anyTrue
     }
     return false;
   } 
