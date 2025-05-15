@@ -1487,7 +1487,7 @@ export class Main extends LitElement {
       graph,
     );
     this.#isSaving = false;
-    
+
     if (!result || !url) {
       if (ackUser && id) {
         this.toast(
@@ -2265,7 +2265,7 @@ export class Main extends LitElement {
     if (!showHeader) {
       this.style.setProperty('--header-height', '0');
     }
-    
+
 
     this.agentspaceUrl = {
       hideHeader: isInsideAgentspaceIframe,
@@ -2753,7 +2753,7 @@ export class Main extends LitElement {
               actionEvt: BreadboardUI.Events.OverflowMenuActionEvent
             ) => {
               this.showBoardOverflowMenu = false;
-             
+
               if (!actionEvt.value) {
                 this.toast(
                   Strings.from("ERROR_GENERIC"),

@@ -5,6 +5,7 @@
  */
 
 import { GraphDescriptor, LLMContent } from "@breadboard-ai/types";
+import { consume } from "@lit/context";
 import * as StringsHelper from "../../strings/helper.js";
 const Strings = StringsHelper.forSection("AppPreview");
 
@@ -27,6 +28,10 @@ import {
   STATUS,
   TopGraphRunResult,
 } from "../../types/types.js";
+import {
+  agentspaceUrlContext,
+  type AgentspaceFlowContent,
+} from "../../contexts/agentspace-url-context.js";
 import { getGlobalColor } from "../../utils/color.js";
 import { classMap } from "lit/directives/class-map.js";
 
@@ -134,6 +139,9 @@ export class AppPreview extends LitElement {
 
   @property()
   accessor settings: SettingsStore | null = null;
+
+  @consume({ context: agentspaceUrlContext })
+  accessor agentspaceFlowContent!: AgentspaceFlowContent;
 
   @state()
   accessor debugEvent: InspectableRunEvent | null = null;
@@ -392,12 +400,28 @@ export class AppPreview extends LitElement {
     }
 
     if (this.graph) {
+      let graphUpdated = false;
       if (this.graph.title !== this.appTitle) {
         this.appTitle = this.graph.title ?? Strings.from("LABEL_UNTITLED_APP");
+        graphUpdated = true;
       }
 
       if (this.graph.description !== this.appDescription) {
         this.appDescription = this.graph.description ?? "";
+        graphUpdated = true;
+      }
+
+      if (graphUpdated && this.agentspaceFlowContent.parentOrigin) {
+        const messageData = {
+          type: 'FLOW_UPDATED',
+          payload: this.graph,
+        };
+
+        try {
+          window.parent.postMessage(messageData, this.agentspaceFlowContent.parentOrigin);
+        } catch(e) {
+          console.error('AppPreview: Error posting message to parent:', e)
+        }
       }
     }
 
