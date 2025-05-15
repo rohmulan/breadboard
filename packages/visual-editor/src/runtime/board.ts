@@ -942,6 +942,7 @@ export class Board extends EventTarget {
       return false;
     }
 
+
     const capabilities = boardServer.canProvide(boardUrl);
     if (!capabilities || !capabilities.save) {
       return false;
@@ -950,8 +951,7 @@ export class Board extends EventTarget {
     for (const store of boardServer.items().values()) {
       for (const item of store.items.values()) {
         if (
-          item.url !== tab.graph.url &&
-          item.url.replace(USER_REGEX, "/") !== tab.graph.url
+          item.url.replace(USER_REGEX, "/") !== tab.graph.url.replace(USER_REGEX, "/")
         ) {
           continue;
         }

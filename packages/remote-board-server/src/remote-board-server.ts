@@ -170,7 +170,6 @@ export class RemoteBoardServer
 
   canProvide(url: URL): false | GraphProviderCapabilities {
     if (
-      !url.href.startsWith(this.url.href) &&
       !url.href.startsWith(this.url.href.replace(USER_REGEX, "/"))
     ) {
       return false;
@@ -181,26 +180,12 @@ export class RemoteBoardServer
     // We recognize it as something that can be loaded from this Board Server,
     // but we can't assess the access for it, so assume loading alone is
     // acceptable.
-    if (!project) {
-      return {
-        load: true,
-        save: false,
-        delete: false,
-      };
-    }
-
-    const access = project.metadata.access.get(this.user.username) ?? {
-      create: false,
-      retrieve: true,
-      update: false,
-      delete: false,
-    };
-
     return {
       load: true,
-      save: access.update,
-      delete: access.delete,
-    };
+      save: true,
+      delete: true,
+    }
+    
   }
 
   extendedCapabilities(): GraphProviderExtendedCapabilities {

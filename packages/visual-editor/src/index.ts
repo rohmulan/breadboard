@@ -2258,10 +2258,13 @@ export class Main extends LitElement {
     const parentOrigin = urlParams.get('parentOrigin') ?? '';
     const isInsideAgentspaceIframe = !!iframe || !!instructions || !!flowGoal || !!flowName;
     const noCodeAgentId = urlParams.get('noCodeAgentId') ?? '';
+    const showHeader = urlParams.get('showHeader')?? '';
     // TODO(jialehong): change to get from engineName.
     //const engineName = urlParams.get('engineName') ?? '';
     const engineName = 'projects/862721868538/locations/global/collections/default_collection/engines/teamfood-v11_1720671063545';
-    this.style.setProperty('--header-height', '0');
+    if (!showHeader) {
+      this.style.setProperty('--header-height', '0');
+    }
     
 
     this.agentspaceUrl = {
@@ -2274,6 +2277,7 @@ export class Main extends LitElement {
       noCodeAgentId,
       engineName,
     }
+    console.log('agentspace context', this.agentspaceUrl);
   }
 
   render() {
