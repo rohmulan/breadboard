@@ -2,6 +2,7 @@ import {
     GraphDescriptor,
   } from "@google-labs/breadboard";
   import {gemini, LLMContent, GeminiErrorResponse, GeminiAPIOutputs, TextCapabilityPart} from "../gemini/gemini.js";
+import { TokenVendor } from "@breadboard-ai/connection-client";
 
 
 const INTRODUCTION_PROMPT = "Please introduce yourself.";
@@ -9,25 +10,26 @@ const INTRODUCTION_PROMPT = "Please introduce yourself.";
 export class ConversationManager {
     #chatHistory: LLMContent[] = [];
     #graphDescription: string = "";
-    #accessToken = "";
+    #tokenVendor?:TokenVendor;
+    
 
-    initial(graph: GraphDescriptor | undefined | null, accessToken?: string) {
+    initial(graph: GraphDescriptor | undefined | null, tokenVendor?: TokenVendor) {
         if (graph) {
             this.#graphDescription = (graph.description || graph.metadata?.intent)?? "";
         }
         this.#chatHistory = [];
-        if (accessToken) {
-            this.#accessToken = accessToken;
+        if (tokenVendor) {
+            this.#tokenVendor = tokenVendor;
         }
     }
 
     // Introduction is not stored in the chat history. 
     async introduceLLM() {
-        return await gemini([{role: "user", parts: [{text:INTRODUCTION_PROMPT}]}], this.#graphDescription, this.#accessToken);
+        return await gemini([{role: "user", parts: [{text:INTRODUCTION_PROMPT}]}], this.#graphDescription, await this.getAccessToken());
     }
 
     async chatWithLLM() {
-        const result = await gemini(this.#chatHistory, this.#graphDescription, this.#accessToken);
+        const result = await gemini(this.#chatHistory, this.#graphDescription, await this.getAccessToken());
         if (result.error) {
             // error handling!!!
             console.log(result.error);
@@ -45,6 +47,25 @@ export class ConversationManager {
 
     async generateTheInput(question: string) {
         console.log(question);
+    }
+
+      
+    async getAccessToken() {
+        if (!this.#tokenVendor) return "";
+        let token = this.#tokenVendor.getToken("$sign-in");
+        const { state } = token;
+
+        if (state === "signedout") {
+            return "";
+        }
+        if (state === "expired") {
+            token = await token.refresh();
+        }
+        const { grant } = token;
+        if (!grant) {
+            return "";
+        }
+        return grant.access_token;
     }
 
     getChatHistory() {
