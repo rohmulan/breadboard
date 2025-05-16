@@ -242,6 +242,12 @@ function createDarkTheme(): AppTheme {
     },
   };
 }
+function isDarkTheme() {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  return urlParams.get('app-theme') && urlParams.get('app-theme') == "dark"
+}
+
 
 function extractThemeFromFlow(flow: GraphDescriptor | null): {
   theme: AppTheme;
@@ -255,12 +261,10 @@ function extractThemeFromFlow(flow: GraphDescriptor | null): {
   let templateAdditionalOptionsChosen: Record<string, string> = {};
 
   let theme: AppTheme = createDefaultTheme();
-  const queryString = window.location.search;
-  const urlParams = new URLSearchParams(queryString);
-  if (urlParams.get('dark')) {
+  if (isDarkTheme()) {
     theme = createDarkTheme();
   }
-  console.log(flow);
+
 
   if (flow?.metadata?.visual?.presentation) {
     if (
@@ -269,21 +273,6 @@ function extractThemeFromFlow(flow: GraphDescriptor | null): {
     ) {
       const { theme: graphTheme, themes } = flow.metadata.visual.presentation;
       const appTheme = themes[graphTheme];
-      const themeColors = appTheme.themeColors;
-      const splashScreen = appTheme.splashScreen;
-
-      if (themeColors) {
-        theme.primaryColor = themeColors["primaryColor"] ?? primaryColor;
-        theme.secondaryColor = themeColors["secondaryColor"] ?? secondaryColor;
-        theme.backgroundColor =
-          themeColors["backgroundColor"] ?? backgroundColor;
-        theme.textColor = themeColors["textColor"] ?? textColor;
-        theme.primaryTextColor =
-          themeColors["primaryTextColor"] ?? primaryTextColor;
-      }
-      if (splashScreen) {
-        theme.splashScreen = splashScreen;
-      }
 
       if (appTheme.templateAdditionalOptions) {
         templateAdditionalOptionsChosen = {
@@ -291,28 +280,6 @@ function extractThemeFromFlow(flow: GraphDescriptor | null): {
         };
       }
     } else {
-      const themeColors = flow.metadata.visual.presentation.themeColors;
-      const splashScreen = flow.assets?.["@@splash"];
-
-      if (themeColors) {
-        theme.primaryColor = themeColors["primaryColor"] ?? primaryColor;
-        theme.secondaryColor = themeColors["secondaryColor"] ?? secondaryColor;
-        theme.backgroundColor =
-          themeColors["backgroundColor"] ?? backgroundColor;
-        theme.textColor = themeColors["textColor"] ?? textColor;
-        theme.primaryTextColor =
-          themeColors["primaryTextColor"] ?? primaryTextColor;
-
-        if (splashScreen) {
-          const splashScreenData = splashScreen.data as LLMContent[];
-          if (splashScreenData.length && splashScreenData[0].parts.length) {
-            const splash = splashScreenData[0].parts[0];
-            if (isInlineData(splash) || isStoredData(splash)) {
-              theme.splashScreen = splash;
-            }
-          }
-        }
-      }
 
       if (flow.metadata.visual.presentation.templateAdditionalOptions) {
         templateAdditionalOptionsChosen = {
@@ -377,6 +344,12 @@ async function bootstrap(args: BootstrapArguments = {}) {
 
     const appView = new Elements.AppView(config, flow);
     document.body.appendChild(appView);
+    if (isDarkTheme()) {
+      document.body.style.background = "#1a1a1a";
+    } else {
+      document.body.style.background = "#ffffff";
+
+    }
 
     appView.addEventListener("reset", async (evt: Event) => {
       if (!(evt.target instanceof HTMLElement)) {
