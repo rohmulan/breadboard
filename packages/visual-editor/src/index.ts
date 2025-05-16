@@ -4031,7 +4031,6 @@ export class Main extends LitElement {
                     } else {
                       message = String(error);
                     }
-                    this.toast(message,BreadboardUI.Events.ToastType.ERROR);
                     this.agentspaceError = {error: evt.error};
                   }
                   const startGraph = blank();
