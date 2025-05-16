@@ -19,8 +19,6 @@ import * as Elements from "./elements/elements.js";
 import {
   createRunObserver,
   GraphDescriptor,
-  isInlineData,
-  isStoredData,
 } from "@google-labs/breadboard";
 import * as BreadboardUIContext from "@breadboard-ai/shared-ui/contexts";
 import * as ConnectionClient from "@breadboard-ai/connection-client";
@@ -31,7 +29,6 @@ import {
   createRunner as createBreadboardRunner,
 } from "@google-labs/breadboard/harness";
 import { getGlobalColor } from "./utils/color.js";
-import { LLMContent } from "@breadboard-ai/types";
 import { getRunStore } from "@breadboard-ai/data-store";
 import { sandbox } from "./sandbox.js";
 import { TopGraphObserver } from "@breadboard-ai/shared-ui/utils/top-graph-observer";
