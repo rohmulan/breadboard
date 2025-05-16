@@ -114,6 +114,8 @@ const load = async (config: RunConfig): Promise<GraphToRun> => {
 };
 
 export async function* runLocally(config: RunConfig, kits: Kit[]) {
+  // console.log("Start run locally and print current kits");
+  // console.log(JSON.stringify(kits, null, 2));
   yield* asyncGen<HarnessRunResult>(async (next) => {
     const graphToRun: GraphToRun = config.runner
       ? { graph: config.runner }

@@ -48,7 +48,11 @@ export const runBoard = async ({
   await boardServerProvider.ready();
 
   const runLoader = createLoader([boardServerProvider]);
+  // Where we initialize all kits
+  // Can we make A2 as a kit here...
   const runKits = createKits(kitOverrides);
+  // console.log("Printing run kits from very beginning");
+  // console.log(JSON.stringify(runKits, null, 2));
   const graphStore = createGraphStore({
     loader: runLoader,
     kits: runKits,

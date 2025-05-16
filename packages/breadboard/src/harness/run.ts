@@ -47,6 +47,8 @@ const configureKits = async (config: RunConfig): Promise<Kit[]> => {
 export async function* run(config: RunConfig) {
   if (!config.remote) {
     yield* asyncGen<HarnessRunResult>(async (next) => {
+      // console.log("Print all kits from config");
+      // console.log(JSON.stringify(config.kits, null, 2));
       const kits = configureSecretAsking(
         config.interactiveSecrets,
         await configureKits(config),

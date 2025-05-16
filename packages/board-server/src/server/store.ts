@@ -101,6 +101,8 @@ export interface BoardServerStore {
   ): Promise<ReanimationState | undefined>;
 
   saveReanimationState(user: string, state: ReanimationState): Promise<string>;
+
+  saveReanimationStateWithTicket?(ticket: string, state: ReanimationState): Promise<void>;
 }
 
 export type ServerCapabilityAccess = "open" | "key";

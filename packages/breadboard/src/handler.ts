@@ -32,8 +32,6 @@ export const callHandler = async (
   inputs: InputValues,
   context: NodeHandlerContext
 ): Promise<OutputValues | void> => {
-  // if (handler instanceof Function) return handler(inputs, context);
-  // if (handler.invoke) return handler.invoke(inputs, context);
   const handlerFunction = getHandlerFunction(handler);
   return new Promise((resolve) => {
     handlerFunction(inputs, context)
@@ -45,6 +43,7 @@ export const callHandler = async (
 };
 
 export const handlersFromKits = (kits: Kit[]): NodeHandlers => {
+  console.log("Get handler from kits");
   return kits.reduce((handlers, kit) => {
     // If multiple kits have the same handler, the kit earlier in the list
     // gets precedence, including upstream kits getting precedence over kits
@@ -76,6 +75,8 @@ export async function getHandler(
   context: NodeHandlerContext
 ): Promise<NodeHandler> {
   if (graphUrlLike(type)) {
+    console.log("Type url...Print node handler context");
+    console.log(JSON.stringify(context, null, 2));
     const graphHandler = await getGraphHandler(type, context);
     if (graphHandler) {
       return graphHandler;
@@ -121,6 +122,7 @@ export async function getGraphHandler(
   const nodeTypeUrl = graphUrlLike(type)
     ? getGraphUrl(type, context)
     : undefined;
+  // nodeTypeUrl: embed://a2/a2.bgl.json#21ee02e7-83fa-49d0-964c-0cab10eafc2c
   if (!nodeTypeUrl) {
     return undefined;
   }
@@ -130,7 +132,8 @@ export async function getGraphHandler(
       `Cannot load graph for type "${type}" without a graph store.`
     );
   }
-
+  console.log("Prepare to load graph with graph store");
+  // We should add A2 kits into kits... Currently A2 kits is not registered for this run
   const loadResult = await graphStore.load(type, context);
   if (!loadResult.success) {
     throw new Error(

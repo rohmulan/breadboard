@@ -1,0 +1,313 @@
+{
+    "metadata": {
+      "intent": "An app that takes a user-provided business name and description as input, searches for relevant information about the business, and generates a social media post including engaging text and a visually appealing image. The app should utilize the provided business information and search results to craft the post content and generate a suitable image.",
+      "revision_intents": [],
+      "parameters": {}
+    },
+    "title": "Social Post",
+    "description": "Generate engaging social media posts for your business.",
+    "version": "0.0.1",
+    "nodes": [
+      {
+        "id": "node_step_research_query",
+        "metadata": {
+          "title": "Generate Research Query",
+          "visual": {
+            "x": 700,
+            "y": 350,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "info",
+          "step_intent": "Generate a search query based on the business name and description to find relevant information about the business.",
+          "output_name": "research_query"
+        },
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "configuration": {
+          "config$prompt": {
+            "parts": [
+              {
+                "text": "Your task is to generate an effective search query based on the provided business name and description. The query should be designed to find relevant information about the business to support the creation of a social media post. The query should be concise and optimized for web search engines.\n# Step by Step instructions\n1. Read the provided Business Name and Business Description.\n2. Construct a search query that combines the Business Name and key terms from the Business Description.\n3. Ensure the search query is concise and optimized for web search engines.\n4. Output the generated search query.\n\n\nBusiness Name:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"ask_user_business_name\",\"title\":\"Business Name\"}}\n\"\"\"\nBusiness Description:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"ask_user_business_description\",\"title\":\"Business Description\"}}\n\"\"\"\nIMPORTANT NOTE: Start directly with the output, do not output any delimiters.\nOutput:\n"
+              }
+            ],
+            "role": "user"
+          },
+          "generation-mode": "text"
+        }
+      },
+      {
+        "id": "node_step_business_research_report",
+        "metadata": {
+          "title": "Research Business Information",
+          "visual": {
+            "x": 1050,
+            "y": 350,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "info",
+          "step_intent": "Conduct in-depth web research about the business using the generated search query to gather relevant information.",
+          "output_name": "business_research_report",
+          "tags": [
+            "appcat_deep_research"
+          ]
+        },
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "configuration": {
+          "config$prompt": {
+            "parts": [
+              {
+                "text": "\nUse one or more of the following tools:\n{{\"type\":\"tool\",\"path\":\"embed://a2/tools.bgl.json#module:search-web\",\"title\":\"Search Web\"}}\n{{\"type\":\"tool\",\"path\":\"embed://a2/tools.bgl.json#module:search-wikipedia\",\"title\":\"Search Wikipedia\"}}\n{{\"type\":\"tool\",\"path\":\"embed://a2/tools.bgl.json#module:get-webpage\",\"title\":\"Get Webpage\"}}\nto perform the following intent:\nConduct in-depth web research about the business using the generated search query to gather relevant information.\n\nUse the following input:\n{{\"type\":\"in\",\"path\":\"node_step_research_query\",\"title\":\"Generate Research Query\"}}\n    "
+              }
+            ],
+            "role": "user"
+          },
+          "generation-mode": "think",
+          "strategy": "Think as I go"
+        }
+      },
+      {
+        "id": "node_step_social_media_text",
+        "metadata": {
+          "title": "Generate Social Media Text",
+          "visual": {
+            "x": 1400,
+            "y": 350,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "info",
+          "step_intent": "Generate the text content for a social media post, incorporating the business name, description, and key findings from the business research report.",
+          "output_name": "social_media_text"
+        },
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "configuration": {
+          "config$prompt": {
+            "parts": [
+              {
+                "text": "You are an expert social media content creator, skilled at crafting engaging and informative posts. Your task is to generate the text content for a social media post for a business, incorporating the provided business name, description, and key findings from the business research report. The post should be compelling, relevant to the business, and designed to capture the attention of potential customers.\n# Step by Step instructions\n1. Read the provided Business Name, Business Description, and Business Research Report.\n2. Write a short phrase or sentence for the social media post, incorporating elements from the Business Name, Business Description, and Business Research Report.\n3. Look back at the social media post text written so far. Does it incorporate the Business Name, Business Description, and key findings from the Business Research Report? If not, go back to step 2 and add more to the post, ensuring it makes progress towards a complete and engaging social media post. If it does, stop.\n\n\nBusiness Name:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"ask_user_business_name\",\"title\":\"Business Name\"}}\n\"\"\"\nBusiness Description:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"ask_user_business_description\",\"title\":\"Business Description\"}}\n\"\"\"\nBusiness Research Report:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"node_step_business_research_report\",\"title\":\"Research Business Information\"}}\n\"\"\"\nIMPORTANT NOTE: Start directly with the output, do not output any delimiters.\nOutput:\n"
+              }
+            ],
+            "role": "user"
+          },
+          "generation-mode": "text"
+        }
+      },
+      {
+        "id": "node_step_image_instruction",
+        "metadata": {
+          "title": "Generate Image Instruction",
+          "visual": {
+            "x": 1750,
+            "y": 350,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "info",
+          "step_intent": "Generate a detailed instruction for image generation, describing a visually appealing image that complements the social media post text and is relevant to the business.",
+          "output_name": "image_instruction"
+        },
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "configuration": {
+          "config$prompt": {
+            "parts": [
+              {
+                "text": "You are an expert visual storyteller and image prompt engineer. Your task is to generate a detailed instruction for image generation, describing a visually appealing image that complements the social media post text and is relevant to the business. You will act as if you are writing a prompt to a GenAI image generation API. Your output will be a natural language description of the image(s) to be generated or edited. If generating multiple images, provide a header for each image (i.e. Image 1: <description> Image 2: <description>...) and then end with the phrase \"IMPORTANT: Generate exactly <number of images> images.\" Avoid instructions related to human facial expressions unless absolutely necessary.\n# Step by Step instructions\n1. Read the provided Social Media Text, Business Name, and Business Description.\n2. Based on the Social Media Text, Business Name, and Business Description, generate a detailed visual description of a single image that is visually appealing, complements the text, and is relevant to the business.\n3. After generating the image description, output the phrase \"IMPORTANT: Generate exactly 1 image.\"\n\n\nSocial Media Text:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"node_step_social_media_text\",\"title\":\"Generate Social Media Text\"}}\n\"\"\"\nBusiness Name:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"ask_user_business_name\",\"title\":\"Business Name\"}}\n\"\"\"\nBusiness Description:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"ask_user_business_description\",\"title\":\"Business Description\"}}\n\"\"\"\nIMPORTANT NOTE: Start directly with the output, do not output any delimiters.\nOutput:\n"
+              }
+            ],
+            "role": "user"
+          },
+          "generation-mode": "text"
+        }
+      },
+      {
+        "id": "node_step_social_media_image",
+        "metadata": {
+          "title": "Generate Social Media Image",
+          "visual": {
+            "x": 2100,
+            "y": 350,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "info",
+          "step_intent": "Generate a visually appealing image based on the detailed image instruction.",
+          "output_name": "social_media_image"
+        },
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "configuration": {
+          "config$prompt": {
+            "parts": [
+              {
+                "text": "{{\"type\":\"in\",\"path\":\"node_step_image_instruction\",\"title\":\"Generate Image Instruction\"}}"
+              }
+            ],
+            "role": "user"
+          },
+          "generation-mode": "image",
+          "p-disable-prompt-rewrite": true
+        }
+      },
+      {
+        "id": "node_step_social_media_post",
+        "metadata": {
+          "title": "Generate Social Media Post Webpage",
+          "visual": {
+            "x": 2450,
+            "y": 350,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "debug",
+          "step_intent": "Combine the generated social media text and image into a single HTML webpage for display to the user.",
+          "output_name": "social_media_post"
+        },
+        "type": "embed://a2/a2.bgl.json#module:render-outputs",
+        "configuration": {
+          "text": {
+            "parts": [
+              {
+                "text": "Generate an HTML webpage to display social media content. The webpage should feature a simple, clean layout with the text positioned above the image. The page should be responsive and display well on various screen sizes.\n\nsocial_media_text: {{\"type\":\"in\",\"path\":\"node_step_social_media_text\",\"title\":\"Generate Social Media Text\"}}\n\nsocial_media_image: {{\"type\":\"in\",\"path\":\"node_step_social_media_image\",\"title\":\"Generate Social Media Image\"}}"
+              }
+            ],
+            "role": "user"
+          },
+          "b-system-instruction": {
+            "parts": [
+              {
+                "text": "You are an AI Web Developer. Your task is to generate a single, self-contained HTML document for rendering in an iframe, based on user instructions and data.\n\n**Visual aesthetic:**\n    * Aesthetics are crucial. Make the page look amazing, especially on mobile.\n    * Respect any instructions on style, color palette, or reference examples provided by the user.\n**Design & Functionality:**\n    * Thoroughly analyze the user's instructions to determine the desired type of webpage, application, or visualization. What are the key features, layouts, or functionality?\n    * Analyze any provided data to identify the most compelling layout or visualization of it. For example, if the user requests a visualization, select an appropriate chart type (bar, line, pie, scatter, etc.) to create the most insightful and visually compelling representation. Or if user instructions say `use a carousel format`, you should consider how to break the content and any media into different card components to display within the carousel.\n    * If requirements are underspecified, make reasonable assumptions to complete the design and functionality. Your goal is to deliver a working product with no placeholder content.\n    * Ensure the generated code is valid and functional. Return only the code, and open the HTML codeblock with the literal string \"```html\".\n    * The output must be a complete and valid HTML document with no placeholder content for the developer to fill in.\n\n**Libraries:**\n  Unless otherwise specified, use:\n    * Tailwind for CSS\n"
+              }
+            ],
+            "role": "user"
+          },
+          "p-render-mode": "Auto",
+          "b-render-model-name": "gemini-flash"
+        }
+      },
+      {
+        "id": "ask_user_business_name",
+        "metadata": {
+          "title": "Business Name",
+          "visual": {
+            "x": 250,
+            "y": 300,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "info"
+        },
+        "type": "embed://a2/a2.bgl.json#21ee02e7-83fa-49d0-964c-0cab10eafc2c",
+        "configuration": {
+          "description": {
+            "parts": [
+              {
+                "text": "Enter the name of your business."
+              }
+            ],
+            "role": "user"
+          },
+          "p-modality": "Any"
+        }
+      },
+      {
+        "id": "ask_user_business_description",
+        "metadata": {
+          "title": "Business Description",
+          "visual": {
+            "x": 250,
+            "y": 450,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "info"
+        },
+        "type": "embed://a2/a2.bgl.json#21ee02e7-83fa-49d0-964c-0cab10eafc2c",
+        "configuration": {
+          "description": {
+            "parts": [
+              {
+                "text": "Provide a brief description of your business."
+              }
+            ],
+            "role": "user"
+          },
+          "p-modality": "Any"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "node_step_research_query",
+        "to": "node_step_business_research_report",
+        "out": "context",
+        "in": "p-z-node_step_research_query"
+      },
+      {
+        "from": "node_step_business_research_report",
+        "to": "node_step_social_media_text",
+        "out": "context",
+        "in": "p-z-node_step_business_research_report"
+      },
+      {
+        "from": "node_step_social_media_text",
+        "to": "node_step_image_instruction",
+        "out": "context",
+        "in": "p-z-node_step_social_media_text"
+      },
+      {
+        "from": "node_step_social_media_text",
+        "to": "node_step_social_media_post",
+        "out": "context",
+        "in": "p-z-node_step_social_media_text"
+      },
+      {
+        "from": "node_step_image_instruction",
+        "to": "node_step_social_media_image",
+        "out": "context",
+        "in": "p-z-node_step_image_instruction"
+      },
+      {
+        "from": "node_step_social_media_image",
+        "to": "node_step_social_media_post",
+        "out": "context",
+        "in": "p-z-node_step_social_media_image"
+      },
+      {
+        "from": "ask_user_business_name",
+        "to": "node_step_research_query",
+        "out": "context",
+        "in": "p-z-ask_user_business_name"
+      },
+      {
+        "from": "ask_user_business_name",
+        "to": "node_step_social_media_text",
+        "out": "context",
+        "in": "p-z-ask_user_business_name"
+      },
+      {
+        "from": "ask_user_business_name",
+        "to": "node_step_image_instruction",
+        "out": "context",
+        "in": "p-z-ask_user_business_name"
+      },
+      {
+        "from": "ask_user_business_description",
+        "to": "node_step_research_query",
+        "out": "context",
+        "in": "p-z-ask_user_business_description"
+      },
+      {
+        "from": "ask_user_business_description",
+        "to": "node_step_social_media_text",
+        "out": "context",
+        "in": "p-z-ask_user_business_description"
+      },
+      {
+        "from": "ask_user_business_description",
+        "to": "node_step_image_instruction",
+        "out": "context",
+        "in": "p-z-ask_user_business_description"
+      }
+    ],
+    "url": "https://unified-server-967603979483.us-central1.run.app/board/boards/@110099467630814779452/e1c0cf07-ad6e-453f-b871-f529dd02d2ec.bgl.json"
+  }

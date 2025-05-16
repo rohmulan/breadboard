@@ -490,6 +490,7 @@ const responseType = object({
   ),
 });
 
+// Fetch result from gemini call
 const fetchResult = fetch({
   $id: "fetch-gemini-api",
   $metadata: { title: "Make API Call", description: "Calling Gemini API" },
@@ -546,29 +547,6 @@ const errorCollector = passthrough({
 retryLoopback.resolve(errorCollector.outputs.retry);
 errorLoopback.resolve(errorCollector.outputs.error);
 
-//   const streamTransform = nursery.transformStream({
-//     $metadata: {
-//       title: "Transform Stream",
-//       description: "Transforming the API output stream to be consumable",
-//     },
-//     board: board(() => {
-//       const transformChunk = json.jsonata({
-//         $id: "transformChunk",
-//         expression:
-//           "candidates[0].content.parts.text ? $join(candidates[0].content.parts.text) : ''",
-//         json: base.input({}).chunk as V<string>,
-//       });
-//       return base.output({ chunk: transformChunk.result });
-//     }),
-//     stream: fetch,
-//   });
-
-//   return base.output({
-//     $metadata: { title: "Stream Output", description: "Outputting a stream" },
-//     schema: streamOutputSchema,
-//     stream: streamTransform,
-//   });
-// }).serialize(metadata);
 
 export default board({
   title: "Gemini Generator",

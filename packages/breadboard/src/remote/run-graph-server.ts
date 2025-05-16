@@ -92,7 +92,11 @@ export const handleRunGraphRequest = async (
           console.log("Prepare store the state")
           const next = await stateStore.save(reanimationState);
           console.log("Require user input, store the current reanimation state in store with ticket %s", next);
-          await filter.writeInput(data, next);
+          // await filter.writeInput(data, next);
+          // Test write response
+          // await filter.writeInput(data, "Test to write some data here");
+          await filter.writeInputWithState(data, next, reanimationState);
+          // We also wanna write the reanimation state here
           await writer.close();
           return;
         }

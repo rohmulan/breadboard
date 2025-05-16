@@ -17,6 +17,7 @@ import type {
   SkipProbeMessage,
 } from "@breadboard-ai/types";
 import { End, RemoteMessage, RemoteMessageWriter } from "./types.js";
+import { ReanimationState } from "../run/types.js";
 
 function omit<T extends RemoteMessage[1]>(message: T, ...keys: (keyof T)[]): T {
   const copy = { ...message };
@@ -99,6 +100,10 @@ export class DiagnosticsFilter {
 
   async writeInput(data: InputResponse, next: string) {
     await this.#writer.write(["input", data, next]);
+  }
+
+  async writeInputWithState(data: InputResponse, next: string, state: ReanimationState) {
+    await this.#writer.write(["input", data, next, state]);
   }
 
   async writeOutput(data: OutputResponse) {

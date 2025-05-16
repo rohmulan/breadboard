@@ -33,6 +33,7 @@ function isA2(url: URL | string | undefined) {
 }
 
 function createA2Server(): BoardServer {
+  console.log("Create A2 embedded board server");
   return new EmbeddedBoardServer(
     "A2",
     SERVER_NAME,

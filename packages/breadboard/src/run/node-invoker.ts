@@ -58,6 +58,8 @@ export class NodeInvoker {
   }
 
   async invokeNode(result: TraversalResult, invocationPath: number[]) {
+    console.log("Prepare to invoke node and print current traversal result");
+    console.log(JSON.stringify(result, null, 2));
     const { descriptor } = result;
     const inputs = this.#adjustInputs(result);
 
@@ -71,6 +73,7 @@ export class NodeInvoker {
 
     const outerGraph = this.#graph.graph;
 
+    console.log("Prepare to get handler with type %s", descriptor.type);
     const handler = await getHandler(descriptor.type, {
       ...this.#context,
       outerGraph,

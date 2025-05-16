@@ -13,7 +13,7 @@ export class InMemoryStorageProvider implements BoardServerStore {
   /** board userId -> name -> boards */
   #boards: Record<string, Record<string, StorageBoard>> = {};
 
-  #states: Record<string, Record<string, ReanimationState>> = {};
+  #states: Record<string, ReanimationState> = {};
 
   async getServerInfo(): Promise<ServerInfo | null> {
     return IN_MEMORY_SERVER_INFO;
@@ -132,10 +132,10 @@ export class InMemoryStorageProvider implements BoardServerStore {
     _ticket: string
   ): Promise<ReanimationState | undefined> {
     console.log("Load reanimation state for user %s and ticket %s from in-memory store...", _user, _ticket);
-    if (!this.#states[_user]) {
+    if (!this.#states[_ticket]) {
       return undefined;
     }
-    const stateFromMemory = this.#states[_user][_ticket];
+    const stateFromMemory = this.#states[_ticket];
     console.dir(stateFromMemory);
     return stateFromMemory? stateFromMemory : undefined;
   }
@@ -145,12 +145,20 @@ export class InMemoryStorageProvider implements BoardServerStore {
     _state: ReanimationState
   ): Promise<string> {
     console.log("Save reanimation state for user %s in in-memory store... will resume later", _user);
-    console.dir(_state);
+    const printedState = JSON.stringify(_state, null, 2);
+    console.dir(printedState);
     const ticket = randomUUID();
-    if (!this.#states[_user]) {
-      this.#states[_user] = {};
-    }
-    this.#states[_user][ticket] = _state;
+    // if (!this.#states[_user]) {
+    //   this.#states[_user] = {};
+    // }
+    this.#states[ticket] = _state;
+    // this.#states[_user][ticket] = _state;
     return Promise.resolve(ticket);
+  }
+
+  saveReanimationStateWithTicket(_ticket: string, _state: ReanimationState): Promise<void> {
+    console.log("Input reanimation from state, store it with the next token %s", _ticket);
+    this.#states[_ticket] = _state;
+    return Promise.resolve();
   }
 }
