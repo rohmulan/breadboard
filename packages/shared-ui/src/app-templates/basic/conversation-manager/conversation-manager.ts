@@ -1,7 +1,7 @@
 import {
     GraphDescriptor,
   } from "@google-labs/breadboard";
-  import {gemini, LLMContent, GeminiErrorResponse, GeminiAPIOutputs, TextCapabilityPart} from "../gemini/gemini.js";
+  import {gemini, LLMContent, extractInformation, GeminiAPIOutputs, TextCapabilityPart} from "../gemini/gemini.js";
 import { TokenVendor } from "@breadboard-ai/connection-client";
 
 
@@ -25,7 +25,9 @@ export class ConversationManager {
 
     // Introduction is not stored in the chat history. 
     async introduceLLM() {
-        return await gemini([{role: "user", parts: [{text:INTRODUCTION_PROMPT}]}], this.#graphDescription, await this.getAccessToken());
+        const content = {role: "user", parts: [{text:INTRODUCTION_PROMPT}]};
+        this.#chatHistory.push(content);
+        return await this.chatWithLLM();
     }
 
     async chatWithLLM() {
@@ -43,6 +45,10 @@ export class ConversationManager {
             }
             return result;
         }
+    }
+
+    async extractInput(inputLabel: string) {
+        return await extractInformation(this.#chatHistory, inputLabel, await this.getAccessToken());
     }
 
     async generateTheInput(question: string) {

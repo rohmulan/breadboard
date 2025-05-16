@@ -134,7 +134,7 @@ function endpointURL(model?: string) {
 
 export async function extractInformation(conversationContext: LLMContent[], informationKey: string, accessToken: string): Promise<string | undefined> {
   const finalContext = [...conversationContext];
-  conversationContext.push({
+  finalContext.push({
     role: "user",
     parts: [
       {
@@ -152,21 +152,26 @@ export async function extractInformation(conversationContext: LLMContent[], info
   const url = endpointURL("gemini-2.0-flash");
   const data = await fetch(url, requestInit);
   if (!data.ok) {
-    return "Error fetching from Geimini API";
+    return undefined;
   } else {
     const res = (await data.json()) as GeminiAPIOutputs;
     const candidate = res.candidates?.at(0);
     if (!candidate) {
-      return "Unable to get a good response from Gemini";
+      return undefined;
     }
     const content = candidate.content;
     const textData = (content?.parts[0] as TextCapabilityPart).text;
     console.log("Print text data from Gemini %s", textData);
-    const cleanedText = textData.replace(/```json\n?|```/g, '').trim();
-    const parsedJsonData = JSON.parse(cleanedText);
-    if (parsedJsonData.found) {
-      return parsedJsonData.value;
-    } else {
+    try {
+      const cleanedText = textData.replace(/```json\n?|```/g, '').trim();
+      const parsedJsonData = JSON.parse(cleanedText);
+      if (parsedJsonData.found) {
+        return parsedJsonData.value;
+      } else {
+        return undefined;
+      }
+    } catch(error) {
+      console.error(error);
       return undefined;
     }
   }

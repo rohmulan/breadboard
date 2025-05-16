@@ -730,7 +730,7 @@ export class Template extends LitElement implements AppTemplate {
 
   #totalNodeCount = 0;
   #nodesLeftToVisit = new Set<string>();
-  protected willUpdate(changedProperties: PropertyValues): void {
+  protected async willUpdate(changedProperties: PropertyValues): Promise<void> {
     if (changedProperties.has("topGraphResult")) {
       if (
         this.graph &&
@@ -785,9 +785,10 @@ export class Template extends LitElement implements AppTemplate {
                       if (this.currentConversation) {
                         this.conversationList.push(this.currentConversation);
                       }
-                      if (this.#LLMCanProvideAnswer(anyValue[1].description ?? "")) {
+                      const inputMap = await this.#LLMCanProvideAnswer(anyValue[1].description ?? "");
+                      if (inputMap && inputMap.length > 0) {
                         setTimeout(() => {
-                          this.#dispatchLLMContent();
+                          this.#dispatchLLMContent(inputMap);
                         });
                       } else {
                         this.currentConversation = {
@@ -806,10 +807,11 @@ export class Template extends LitElement implements AppTemplate {
                       break;
                     }
                   }
-                  if (this.#hideOutput(lastOutput)) {
+                  const inputMap = await this.#generateInput(lastOutput);
+                  if (inputMap ) {
                     console.log('This is the question LLM can provide answer!');
                     setTimeout(() => {
-                      this.#dispatchLLMContent();
+                        this.#dispatchLLMContent(inputMap);
                     });
 
                   } else {
@@ -1140,13 +1142,13 @@ export class Template extends LitElement implements AppTemplate {
   }
 
 
-  #dispatchLLMContent() {
-    const lastUserQuery = this.#conversationManager.getLatestUserContent();
-    this.hidenText = lastUserQuery;
-    console.log('this is the last user query:', lastUserQuery);
+  #dispatchLLMContent(inputMap: [string, string]) {
+    const [label, input] = inputMap;
+
+    console.log(`this is the hidden label:${label} with input: ${input}`);
     const inputValues: OutputValues = {};
     
-    inputValues['request'] = this.#toLLMContentWithTextPart(lastUserQuery) as NodeValue;
+    inputValues['request'] = this.#toLLMContentWithTextPart(input) as NodeValue;
 
     this.dispatchEvent(
       new InputEnterEvent(
@@ -1289,29 +1291,39 @@ export class Template extends LitElement implements AppTemplate {
       }
     }
 
-    #hideOutput(output: EdgeLogEntry | null): boolean {
-      if (!output || !output.value || !output.schema) return false;
+
+
+    async #generateInput(output: EdgeLogEntry | null): Promise<[string, string] | undefined > {
+      if (!output || !output.value || !output.schema) return undefined;
       const schema = output.schema;
       const titleMatch = output.descriptor?.metadata?.title === "User Input";
-      let anyTrue = false;
-     Object.entries(output.value).map(([name, outputValue]) => {
+      if (!titleMatch) return undefined;
+      const checkList = Object.entries(output.value).map(([name, outputValue]) => {
         const insideSchema = schema.properties?.[name];
-        if (isLLMContent(outputValue) && outputValue.role === "user") {
-          const label = (outputValue.parts[0] as TextCapabilityPart).text;
-          if (!!label && this.#LLMCanProvideAnswer(label)) {
-            anyTrue = true;
-          }
+        if (isLLMContent(outputValue) && outputValue.role === "user" && insideSchema) {
+          return (outputValue.parts[0] as TextCapabilityPart).text;
+          
+          // return this.#LLMCanProvideAnswer(label);
         }
-      });      
-      return anyTrue && titleMatch;
+        return undefined;
+      }); 
+      const validInputs = checkList.filter(input => !!input);
+      if (!validInputs || validInputs.length === 0) {
+        return undefined;
+      }
+      return await this.#LLMCanProvideAnswer(validInputs[0]);
+      
     }
 
-    #LLMCanProvideAnswer(question?: string) {
+    async #LLMCanProvideAnswer(question?: string): Promise<[string, string] | undefined> {
       // Hardcode for now to answer any question. 
       if (question) {
-        return false;
+        const result = await this.#conversationManager.extractInput(question);
+        if (result) {
+          return [question, result];
+        }
       }
-      return false;
+      return undefined;
     }
 
   async firstUpdated() {
