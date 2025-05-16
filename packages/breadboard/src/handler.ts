@@ -75,8 +75,6 @@ export async function getHandler(
   context: NodeHandlerContext
 ): Promise<NodeHandler> {
   if (graphUrlLike(type)) {
-    console.log("Type url...Print node handler context");
-    console.log(JSON.stringify(context, null, 2));
     const graphHandler = await getGraphHandler(type, context);
     if (graphHandler) {
       return graphHandler;
@@ -127,6 +125,26 @@ export async function getGraphHandler(
     return undefined;
   }
   const { graphStore } = context;
+  // "graphStore": {
+  //   "kits": [
+  //     {
+  //       "url": "https://unified-server-967603979483.us-central1.run.app/index-JjCjofzB.js",
+  //       "handlers": {
+  //         "runModule": {}
+  //       }
+  //     },
+  //     {
+  //       "title": "Core Kit",
+  //       "url": "npm:@google-labs/core-kit",
+  //       "tags": []
+  //     }
+  //   ],
+  //   "sandbox": {
+  //     "runtimeUrl": "https://unified-server-967603979483.us-central1.run.app/sandbox.wasm"
+  //   },
+  //   "loader": {},
+  //   "fileSystem": {}
+  // },
   if (!graphStore) {
     throw new Error(
       `Cannot load graph for type "${type}" without a graph store.`

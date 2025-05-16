@@ -100,6 +100,8 @@ export class Loader implements GraphLoader {
   }
 
   async #loadWithProviders(url: URL): Promise<GraphLoaderResult> {
+    console.log("prepare to load graph from provider and print all providers");
+    console.dir(this.#graphProviders);
     for (const provider of this.#graphProviders) {
       const capabilities = provider.canProvide(url);
       if (capabilities === false) {
@@ -129,6 +131,7 @@ export class Loader implements GraphLoader {
     hash: string,
     supergraph: GraphDescriptor
   ): GraphLoaderResult {
+    console.log("Trying to get sub graph for url %s and hash %s", url, hash);
     const isModule = hash.startsWith(MODULE_PREFIX);
     if (isModule) {
       const modules = supergraph.modules;
@@ -167,6 +170,7 @@ export class Loader implements GraphLoader {
     path: string,
     context: GraphLoaderContext
   ): Promise<GraphLoaderResult> {
+    console.log("Load graph for path %s", path);
     const supergraph = context.outerGraph;
     // This is a special case, when we don't have URLs to resolve against.
     // We are a hash path, and we are inside of a supergraph that doesn't
@@ -179,9 +183,12 @@ export class Loader implements GraphLoader {
     }
 
     const url = getGraphUrl(path, context);
+    // Resolved graph url is "embed://a2/a2.bgl.json"
+    console.log("Resolved graph url is %s", JSON.stringify(url));
 
     // If we don't have a hash, just load the graph.
     if (!url.hash) {
+      console.log("url no hash");
       return await this.#loadOrWarn(url);
     }
 
