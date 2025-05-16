@@ -332,9 +332,9 @@ The specific piece of information you are looking for is: "**${informationKey}**
 
 Task:
 1. **Identify relevant messages:** Only consider messages where the \`role\` is "user". Ignore messages from the "model".
-2. **Scan for the information:** Carefully read the \`text\` content of each user message. Pay close attention to statements that define or describe the user's intent or requirements for the requested information.
-3. **Extract or state absence:**
-    - If you find the information corresponding to "**${informationKey}**" in *any* user message, extract *only* that specific piece of information.
+2. **Scan for the information (from latest to oldest):** Read the \`text\` content of user messages *starting from the most recent message and going backwards through the history*. Pay close attention to statements that define or describe the user's intent or requirements for the requested information.
+3. **Extract the *first* match found from the latest user message, or state absence:**
+    - If you find the information corresponding to "**${informationKey}**" in *any* user message, extract *only* that specific piece of information from the *latest occurring* user message that contains it. Do not include any other text or conversational filler.
     - If the information for "**${informationKey}**" is *not* found in any user message, you must indicate its absence.
 
 Output Format:
@@ -543,6 +543,46 @@ Output:
 {
   "key": "code description",
   "value": "get current local time in string format",
+  "found": true
+}
+
+---
+**Example 6: Latest match prioritization (for "what image do you want to generate")**
+
+Contents:
+\`\`\`json
+[
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "Please generate an image of a cat."
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "text": "Okay, a cat image."
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "Actually, I changed my mind. Generate an image of a dog instead."
+      }
+    ]
+  }
+]
+\`\`\`
+
+Output:
+{
+  "key": "what image do you want to generate",
+  "value": "dog",
   "found": true
 }
 `;
