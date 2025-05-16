@@ -26,7 +26,7 @@ import {
   SelectionMoveEvent,
   SelectionTranslateEvent,
 } from "./events/events";
-import { createRef, ref, Ref } from "lit/directives/ref.js";eee 
+import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
 import {
   BehaviorSchema,
