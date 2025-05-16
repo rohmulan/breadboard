@@ -43,6 +43,7 @@ import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { SIGN_IN_CONNECTION_ID } from "../../utils/signin-adapter.js";
 import { InputChangeEvent } from "../../plugins/input-plugin.js";
 import { icons } from "../../styles/icons.js";
+import "../error-display/error-display.js";
 
 const QUICK_ADD_ADJUSTMENT = -20;
 
@@ -364,10 +365,11 @@ export class EditorControls extends LitElement {
         box-sizing: border-box;
       }
 
-      bb-flowgen-editor-input {
-        flex: 1;
+      bb-error-display {
+        flex:1;
         margin: var(--bb-grid-size-7) var(--bb-grid-size-3);
       }
+
 
       #component-picker {
         position: fixed;
@@ -1151,8 +1153,10 @@ export class EditorControls extends LitElement {
         : nothing}
     </div>`;
 
-    const shelf = html`<div id="shelf" style="display: none">
-      <bb-flowgen-editor-input
+    const shelf = html`<div id="shelf">
+      <bb-error-display
+      ></bb-error-display>
+      <bb-flowgen-editor-input style="display: none"
         .currentGraph=${this.graph.raw()}
         @pointerdown=${(evt: PointerEvent) => {
         // <bb-renderer> listens for pointerdown and retains focus so that

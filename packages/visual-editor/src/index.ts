@@ -288,6 +288,9 @@ export class Main extends LitElement {
   @provide({context: BreadboardUI.Contexts.agentspaceUrlContext})
   accessor agentspaceUrl!: BreadboardUI.Contexts.AgentspaceFlowContent;
 
+  @provide({context: BreadboardUI.Contexts.agentspaceErrorContext})
+  accessor agentspaceError!: BreadboardUI.Contexts.AgentspaceErrorContent;
+
   @state()
   accessor selectedBoardServer = "Browser Storage";
 
@@ -4029,6 +4032,7 @@ export class Main extends LitElement {
                       message = String(error);
                     }
                     this.toast(message,BreadboardUI.Events.ToastType.ERROR);
+                    this.agentspaceError = {error: evt.error};
                   }
                   const startGraph = blank();
                   updateFlowBasedOnContext(startGraph, this.agentspaceUrl);
