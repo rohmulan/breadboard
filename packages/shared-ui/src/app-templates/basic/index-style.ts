@@ -630,6 +630,7 @@ export default  css`
             & .action-group {
               display: flex;
               gap: 4px;
+              margin-left: auto;
             }           
 
             & #stop {

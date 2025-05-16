@@ -409,8 +409,8 @@ export class Template extends LitElement implements AppTemplate {
     const currentItem = topGraphResult.log.at(-1);
 
     const controls = html`<div class="controls">
-      <div class="action-group">
-        <bb-add-asset-button
+      <!-- <div class="action-group"> -->
+        <!-- <bb-add-asset-button
           .anchor=${"above"}
           .useGlobalPosition=${false}
           .showGDrive=${this.showGDrive}
@@ -445,8 +445,8 @@ export class Template extends LitElement implements AppTemplate {
             />
           </svg>
           <span class="text">Sources</span>
-        </button>
-      </div>
+        </button> -->
+      <!-- </div> -->
       <div class="action-group">
         <button
           id="reset"
