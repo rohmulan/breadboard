@@ -782,21 +782,26 @@ export class Template extends LitElement implements AppTemplate {
                       return false;
                     });
                     if (anyValue) {
-                      if (this.currentConversation) {
-                        this.conversationList.push(this.currentConversation);
-                      }
-                      const inputMap = await this.#LLMCanProvideAnswer(anyValue[1].description ?? "");
-                      if (inputMap && inputMap.length > 0) {
-                        setTimeout(() => {
-                          this.#dispatchLLMContent(inputMap);
-                        });
-                      } else {
-                        this.currentConversation = {
-                          model: html `
-                            <p>${anyValue[1].description}</p>
-                          `
-                        };
-                      }
+                      this.conversationList.push({model: this.#renderActivity(this.topGraphResult)});
+                      this.currentConversation = {
+                        model: html `
+                          <p>${anyValue[1].description}</p>
+                        `
+                      };
+
+                      // Right now, do not skip input for this case.
+                      // const inputMap = await this.#LLMCanProvideAnswer(anyValue[1].description ?? "");
+                      // if (inputMap && inputMap.length > 0) {
+                      //   setTimeout(() => {
+                      //     this.#dispatchLLMContent(inputMap);
+                      //   });
+                      // } else {
+                      //   this.currentConversation = {
+                      //     model: html `
+                      //       <p>${anyValue[1].description}</p>
+                      //     `
+                      //   };
+                      // }
                       return;
                     }
                   }
