@@ -50,6 +50,8 @@ export async function* runGraph(
 
   const lifecycle = state?.lifecycle();
   yield* asyncGen<BreadboardRunResult>(async (next) => {
+    // Initialize node invoker, what is the loader difference between UI and board server?
+    // args contains kits, store, loader...
     const nodeInvoker = new NodeInvoker(args, graphToRun, next);
 
     lifecycle?.dispatchGraphStart(graph.url!, invocationPath);

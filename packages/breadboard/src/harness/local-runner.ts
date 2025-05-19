@@ -99,6 +99,8 @@ export class LocalRunner
       const starting = !this.#run;
 
       if (!this.#run) {
+        console.log("The starting point of run from UI, print Runconfig");
+        console.log(JSON.stringify(this.#config, null, 2));
         this.#run = run(this.#config);
       } else if (this.#pendingResult) {
         this.#pendingResult.reply({ inputs: inputs ?? {} });

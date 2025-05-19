@@ -48,6 +48,7 @@ export const runBoard = async ({
 
   const runLoader = createLoader([boardServerProvider]);
   const runKits = createKits(kitOverrides);
+  // This might be the place we should provide embeded server..
   const graphStore = createGraphStore({
     loader: runLoader,
     kits: runKits,

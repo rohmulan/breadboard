@@ -34,6 +34,8 @@ export class NodeInvoker {
   ) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { inputs, start, stopAfter, ...context } = args;
+    console.log("Node invoker constructor called, print context to see all loader, store and kits");
+    console.log(JSON.stringify(context, null, 2));
     this.#requestedInputs = new RequestedInputsManager(args);
     this.#resultSupplier = next;
     this.#graph = graph;
