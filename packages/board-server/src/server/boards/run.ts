@@ -23,6 +23,8 @@ async function runHandler(
   req: Request,
   res: Response
 ): Promise<void> {
+  
+  console.log("Starting point of runBoard API...");
   const store: BoardServerStore = req.app.locals.store;
 
   const boardId: BoardId = res.locals.boardId;
@@ -37,6 +39,8 @@ async function runHandler(
   const {
     $next: next,
     $diagnostics: diagnostics,
+    $board: board,
+    $state: state,
     ...inputs
   } = req.body as Record<string, any>;
   const writer = new WritableStream<RemoteMessage>({
@@ -47,7 +51,10 @@ async function runHandler(
   res.setHeader("Content-Type", "text/event-stream");
   res.statusCode = 200;
 
-  const userId = await verifyKey(inputs, store);
+  // const userId = await verifyKey(inputs, store);
+  const userId = res.locals.userId;
+  console.log("Get userId from request token: %s", userId);
+  
   if (!userId) {
     await writer.write([
       "graphstart",
@@ -72,6 +79,31 @@ async function runHandler(
     await writer.close();
     res.end();
     return;
+  }
+
+  if (board) {
+    console.log("Board data is present in the request body and printing the board object");
+    console.dir(board);
+    await store.upsertBoard({
+      name: boardId.name,
+      owner: userId,
+      displayName: board.title || boardId.name,
+      description: board.description ?? "",
+      tags: board.metadata?.tags ?? [],
+      thumbnail: "",
+      graph: board,
+    });
+  }
+  if (state && next) {
+    console.log("Reanimation state is present in the request body and printing the state");
+    console.log(JSON.stringify(state, null, 2));
+    // console.dir(state);
+    // {
+    //   states: { '': { state: [Object], path: [Array] } },
+    //   visits: [ [ 'input-04eae35b', [Array] ] ]
+    // }
+    // We do not need the userId for state anymore, use the $next token(UUID) as key for state
+    await store.saveReanimationStateWithTicket!(next, state);
   }
 
   await runBoard({

@@ -63,6 +63,9 @@ export function serveBoardsAPI(serverConfig: ServerConfig): Router {
   router.post("/@:user/:name/run", parseBoardId(), async (req, res) =>
     runBoard(serverConfig, req, res)
   );
+  router.post("/@:user/:name/runWithBoard", parseBoardId(), async (req, res) =>
+    runBoard(serverConfig, req, res)
+  );
   router.post("/@:user/:name/describe", loadBoard(), describeBoard);
 
   router.post(

@@ -32,6 +32,8 @@ function isA2(url: URL | string | undefined) {
   return isFromEmbeddedServer(url, SERVER_NAME);
 }
 
+// The EmbeddedBoardServer is a class that allows you to serve Breadboard graphs (boards) directly from memory, 
+// using these pre-loaded definitions.
 function createA2Server(): BoardServer {
   return new EmbeddedBoardServer(
     "A2",

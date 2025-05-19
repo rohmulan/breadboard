@@ -7,7 +7,7 @@
 import { DataStore, StateStore } from "../data/types.js";
 import { RunConfig, RunDiagnosticsLevel } from "../harness/types.js";
 import { GraphLoader } from "../loader/types.js";
-import type { RunState } from "../run/types.js";
+import type { ReanimationState, RunState } from "../run/types.js";
 import { PatchedReadableStream } from "../stream.js";
 import type {
   EdgeProbeMessage,
@@ -83,7 +83,12 @@ export type AsRemoteMessage<T extends GenericResult> = [
 export type RunRequest = Record<string, never>;
 export type RunRequestMessage = ["run", RunRequest, RunState?];
 export type OutputRemoteMessage = ["output", OutputResponse];
-export type InputRemoteMessage = ["input", InputResponse, next?: string];
+// This does not work.... 
+// export type InputRemoteMessage = ["input", InputResponse, next?: string, state?: ReanimationState];
+export type InputRemoteMessage =
+  | ["input", InputResponse] // No next, no state
+  | ["input", InputResponse, string] // With next, no state
+  | ["input", InputResponse, string, ReanimationState]; // With next, with state
 
 /**
  * Sent by the client to provide inputs, requested by the server.

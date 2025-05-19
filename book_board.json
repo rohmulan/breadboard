@@ -1,0 +1,296 @@
+{
+    "metadata": {
+      "intent": "",
+      "revision_intents": [
+        "The app should take a book description as input, generate a list of 5 book recommendations, create a short summary, and generate a link to purchase each book. Finally, it should generate a webpage that displays the book recommendations, their summaries, and purchase links.",
+        "The app should take a book description as input, generate a list of 5 book recommendations, create a short summary and provide an explanation for each book, and generate a link to purchase each book. Finally, it should generate a webpage that displays the book recommendations, their summaries and explanations, and purchase links.",
+        "Include a brief explanation for why each book is recommended."
+      ],
+      "parameters": {
+        "book_description": {
+          "title": "Book Description",
+          "usedIn": [],
+          "description": "Describe the type of book you are looking for (e.g. \"Similar to Boxcar Children\")",
+          "modality": [
+            "text"
+          ],
+          "sample": [
+            {
+              "parts": [
+                {
+                  "text": ""
+                }
+              ],
+              "role": "user"
+            }
+          ]
+        }
+      },
+      "userModified": true,
+      "tags": []
+    },
+    "url": "https://unified-server-399366659891.us-central1.run.app/board/boards/@117837853443102496952/1d2a9eef-0316-4de5-a23b-619a8a4a9d4a.bgl.json",
+    "title": "BookMeUp",
+    "description": "Discover your next favorite read!",
+    "version": "0.0.1",
+    "nodes": [
+      {
+        "id": "node_step_book_recommendations",
+        "metadata": {
+          "title": "Generate Book Recommendations",
+          "visual": {
+            "x": 856.5313929342665,
+            "y": 551.4046037136577,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "info",
+          "step_intent": "Generate a list of 5 book recommendations that match the description provided in 'book_description'. The output should be a markdown ordered list format, each item should be a single line. Do not create more list items than necessary.",
+          "output_name": "book_recommendations",
+          "userModified": false
+        },
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "configuration": {
+          "config$prompt": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "You are a skilled literary guide, a master of matching readers with their perfect next read. Your goal is to generate a list of five book recommendations based on a provided description of a book the user is looking for. The recommendations should be presented as a markdown ordered list, with each item containing a single line with the book title. You should only generate as many list items as there are recommendations.  \n\nEnsure that each item in the list is a single line and that the list is formatted correctly.\n\n## Step by Step Instructions\n1. Read the provided `book_description` carefully, paying attention to the genre, plot, tone, and any specific themes or elements mentioned. \n2. Based on your understanding of `book_description`, generate a list of 5 book titles that you think would be good recommendations for the user. \n3. Output the list of book titles in a markdown ordered list format, with each item on a separate line. \n4. Have you generated 5 book titles? If not, go back to step 2.\n5. If you have generated 5 book titles, have you ensured each item is a single line in a markdown ordered list format? If not, go back to step 3. \n\nBook Description:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"c16796bf-3f06-43d8-8fdd-4d63fbb17f41\",\"title\":\"Describe a book\"}}\n\"\"\"\nIMPORTANT NOTE: Start directly with the output, do not output any delimiters.\nOutput:"
+              }
+            ]
+          },
+          "generation-mode": "text",
+          "b-system-instruction": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "You are working as part of an AI system, so no chit-chat and no explaining what you're doing and why.\nDO NOT start with \"Okay\", or \"Alright\" or any preambles. Just the output, please."
+              }
+            ]
+          },
+          "config$ask-user": false
+        }
+      },
+      {
+        "id": "node_step_book_summaries",
+        "metadata": {
+          "title": "Generate Book Summaries",
+          "visual": {
+            "x": 1256.5313929342665,
+            "y": 371.4046037136577,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "info",
+          "step_intent": "Generate a short summary for each book in the 'book_recommendations' list. The output should be a markdown ordered list format, each item should be a single line. Do not create more list items than necessary.",
+          "output_name": "book_summaries",
+          "userModified": false
+        },
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "configuration": {
+          "config$prompt": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "You are a seasoned book summarizer, adept at distilling the essence of a book into a concise and informative summary. Your task is to generate a short summary for each book in the `book_recommendations` list. The output should be a markdown ordered list, with each item containing a single line summary of the corresponding book. Ensure that the number of list items matches the number of books in the `book_recommendations` list. Avoid adding any extra information or embellishments beyond the required summaries. \n\n\n# Step by Step Instructions\n\n1. Examine the `book_recommendations` list.\n2. For each book in the `book_recommendations` list:\n    * Read the book.\n    * Distill the key plot points, themes, and central message into a concise summary.\n    * Ensure the summary is a single line and does not exceed the specified length.\n3. Organize the summaries as an ordered list in markdown format.\n4. Output the completed list. \n\nBook Recommendations:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"node_step_book_recommendations\",\"title\":\"Generate Book Recommendations\"}}\n\"\"\"\nIMPORTANT NOTE: Start directly with the output, do not output any delimiters.\nOutput:"
+              }
+            ]
+          },
+          "generation-mode": "text",
+          "config$ask-user": false,
+          "config$list": false
+        }
+      },
+      {
+        "id": "node_step_book_explanations",
+        "metadata": {
+          "title": "Generate Book Explanations",
+          "visual": {
+            "x": 1256.5313929342665,
+            "y": 531.4046037136577,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "info",
+          "step_intent": "Generate a brief explanation for why each book is recommended. The output should be a markdown ordered list format, each item should be a single line. Do not create more list items than necessary.",
+          "output_name": "book_explanations",
+          "userModified": false
+        },
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "configuration": {
+          "config$prompt": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "You are a helpful and insightful book recommender, dedicated to providing concise and valuable summaries of why each book is recommended based on the user description. You will be given a list of book recommendations and your task is to create a markdown ordered list explaining each recommendation in a single line. Avoid generating any additional list items beyond the number of book recommendations provided. \n\n\n# Step by Step instructions\n1. Review the provided book description from the user that describes the desired book characteristics.\n2.  Access the provided `book_recommendations`.\n3.  For each entry in `book_recommendations`:\n    *  Generate a single line explanation of why that book is recommended.\n4.  Output these explanations in a markdown ordered list.\n5.  Ensure the number of list items in the output matches the number of recommendations in `book_recommendations`. \n\nBook Recommendations:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"c16796bf-3f06-43d8-8fdd-4d63fbb17f41\",\"title\":\"Describe a book\"}}\n\"\"\"\nBook Recommendations:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"node_step_book_recommendations\",\"title\":\"Generate Book Recommendations\"}}\n\"\"\"\nIMPORTANT NOTE: Start directly with the output, do not output any delimiters.\nOutput:"
+              }
+            ]
+          },
+          "generation-mode": "text",
+          "config$ask-user": false,
+          "config$list": false,
+          "b-system-instruction": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "You are working as part of an AI system, so no chit-chat and no explaining what you're doing and why.\nDO NOT start with \"Okay\", or \"Alright\" or any preambles. Just the output, please."
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "node_step_purchase_links",
+        "metadata": {
+          "title": "Generate Purchase Links",
+          "visual": {
+            "x": 1256.5313929342665,
+            "y": 751.4046037136577,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "info",
+          "step_intent": "Generate a link to purchase each book in the 'book_recommendations' list. The output should be a markdown ordered list format, each item should be a single line. Do not create more list items than necessary.",
+          "output_name": "purchase_links",
+          "userModified": false
+        },
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "configuration": {
+          "config$prompt": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "You are a skilled online librarian, adept at finding specific information on the web. Your task is to generate a markdown ordered list containing links to purchase each book within the `book_recommendations` list.  The output should be in a markdown ordered list format, with each URL listed on a separate line. Ensure that the list contains the same number of items as the `book_recommendations` list, avoiding any extra or missing items. \n\nStart directly with the output, do not output any delimiters. \n\n\n# Step by Step Instructions\n1. Examine the provided `book_recommendations` list.\n2. For each book title in the `book_recommendations` list, use {{\"type\":\"tool\",\"path\":\"embed://a2/tools.bgl.json#module:search-web\",\"title\":\"Search Web\"}} to find a link to purchase the book. \n3. If a purchase link for the book is found, create a new list item in the output, adding the link as the content of that list item. \n4. Once you have completed the process for all the books in the `book_recommendations` list, ensure the list includes the correct number of items and is formatted as a markdown ordered list. Each item should be on a single line. \n\nBook Recommendations:\n\"\"\"\n{{\"type\":\"in\",\"path\":\"node_step_book_recommendations\",\"title\":\"Generate Book Recommendations\"}}\n\"\"\"\nIMPORTANT NOTE: Start directly with the output, do not output any delimiters.\nOutput:"
+              }
+            ]
+          },
+          "generation-mode": "text",
+          "config$ask-user": false,
+          "config$list": false,
+          "b-system-instruction": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "You are working as part of an AI system, so no chit-chat and no explaining what you're doing and why.\nDO NOT start with \"Okay\", or \"Alright\" or any preambles. Just the output, please."
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "node_step_recommendations_page",
+        "metadata": {
+          "title": "Display Recommendations Page",
+          "visual": {
+            "x": 1656.5313929342665,
+            "y": 551.4046037136577,
+            "collapsed": "expanded",
+            "outputHeight": 88
+          },
+          "logLevel": "debug",
+          "step_intent": "Generate a webpage that displays the book recommendations, their summaries, explanations, and links to purchase each book. The webpage should be well-formatted and easy to navigate, and have a consistent style and structure for each book that is recommended. If there is more than one link, choose only one to display.",
+          "output_name": "recommendations_page",
+          "userModified": false
+        },
+        "type": "embed://a2/a2.bgl.json#module:render-outputs",
+        "configuration": {
+          "text": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Generate a webpage that displays the book recommendations, their summaries, explanations, and links to purchase each book. The webpage should be well-formatted and easy to navigate, and have a consistent style and structure for each book that is recommended. If there is more than one link, choose only one to display.\n\nUse the following information to construct the page:\n\nbook recommendations: {{\"type\":\"in\",\"path\":\"node_step_book_recommendations\",\"title\":\"Generate Book Recommendations\"}}\n\nbook summaries: {{\"type\":\"in\",\"path\":\"node_step_book_summaries\",\"title\":\"Generate Book Summaries\"}}\n\nbook explanations: {{\"type\":\"in\",\"path\":\"node_step_book_explanations\",\"title\":\"Generate Book Explanations\"}}\n\npurchase links: {{\"type\":\"in\",\"path\":\"node_step_purchase_links\",\"title\":\"Generate Purchase Links\"}}\n\nUse Daisy UI for pre-built Tailwind components."
+              }
+            ]
+          },
+          "p-render-mode": "Webpage with auto-layout by 2.5 Pro",
+          "b-system-instruction": {
+            "role": "user",
+            "parts": [
+              {
+                "text": ""
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "c16796bf-3f06-43d8-8fdd-4d63fbb17f41",
+        "type": "embed://a2/a2.bgl.json#21ee02e7-83fa-49d0-964c-0cab10eafc2c",
+        "metadata": {
+          "title": "Describe a book",
+          "visual": {
+            "x": 676.5313929342665,
+            "y": 411.4046037136577
+          },
+          "userModified": true
+        },
+        "configuration": {
+          "description": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Explain the book genre or characteristics you are looking for (e.g. \"similar to boxcar children\")"
+              }
+            ]
+          },
+          "p-modality": "Any"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "node_step_book_recommendations",
+        "to": "node_step_book_summaries",
+        "out": "context",
+        "in": "p-z-node_step_book_recommendations"
+      },
+      {
+        "from": "node_step_book_recommendations",
+        "to": "node_step_book_explanations",
+        "out": "context",
+        "in": "p-z-node_step_book_recommendations"
+      },
+      {
+        "from": "node_step_book_recommendations",
+        "to": "node_step_purchase_links",
+        "out": "context",
+        "in": "p-z-node_step_book_recommendations"
+      },
+      {
+        "from": "node_step_book_recommendations",
+        "to": "node_step_recommendations_page",
+        "out": "context",
+        "in": "p-z-node_step_book_recommendations"
+      },
+      {
+        "from": "node_step_book_summaries",
+        "to": "node_step_recommendations_page",
+        "out": "context",
+        "in": "p-z-node_step_book_summaries"
+      },
+      {
+        "from": "node_step_book_explanations",
+        "to": "node_step_recommendations_page",
+        "out": "context",
+        "in": "p-z-node_step_book_explanations"
+      },
+      {
+        "from": "node_step_purchase_links",
+        "to": "node_step_recommendations_page",
+        "out": "context",
+        "in": "p-z-node_step_purchase_links"
+      },
+      {
+        "from": "c16796bf-3f06-43d8-8fdd-4d63fbb17f41",
+        "to": "node_step_book_recommendations",
+        "out": "context",
+        "in": "p-z-c16796bf-3f06-43d8-8fdd-4d63fbb17f41"
+      },
+      {
+        "from": "c16796bf-3f06-43d8-8fdd-4d63fbb17f41",
+        "to": "node_step_book_explanations",
+        "out": "context",
+        "in": "p-z-c16796bf-3f06-43d8-8fdd-4d63fbb17f41"
+      }
+    ]
+  }

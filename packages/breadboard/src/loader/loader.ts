@@ -96,6 +96,9 @@ export class Loader implements GraphLoader {
   #graphProviders: GraphProvider[];
 
   constructor(graphProviders: GraphProvider[]) {
+    // How can we provide embeded server here
+    console.log("Loader constructor called, print all graph providers");
+    console.log(JSON.stringify(graphProviders, null, 2));
     this.#graphProviders = graphProviders;
   }
 

@@ -20,7 +20,7 @@ import { loadBoard } from "./server/boards/loader.js";
 import { InMemoryStorageProvider } from "./server/storage-providers/inmemory.js";
 import { FirestoreStorageProvider } from "./server/storage-providers/firestore.js";
 import { ApplicationIntegrationStorageProvider } from "./server/storage-providers/applicationintegration.js";
-import type { AllowFilterFunction } from "@google-labs/breadboard/remote";
+import type { AllowFilterFunction} from "@google-labs/breadboard/remote";
 
 export type { ServerConfig, StorageProvider };
 
@@ -33,6 +33,7 @@ export const middlewares = {
 
 export function createServer(config: ServerConfig): Express {
   const server = express();
+  console.log("Input server config is %s", config);
   addMiddleware(server, config);
   server.use(createRouter(config));
 

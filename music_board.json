@@ -1,0 +1,284 @@
+{
+    "metadata": {
+      "intent": "User wants an app that generates a 5-song playlist based on a given mood or music preferences and creates a witty DJ intro for each song.",
+      "instruction": "Generate a personalized 5-song playlist with witty DJ introductions.",
+      "tagline": "",
+      "revision_intents": [
+        "Remove the research and just stick with your own knowledge for the songs"
+      ],
+      "parameters": {},
+      "userModified": true,
+      "tags": []
+    },
+    "url": "https://unified-server-399366659891.us-central1.run.app/board/boards/@117837853443102496952/1b7eaed5-b413-422e-bd11-62f4fe2bb387.bgl.json",
+    "title": "MoodDJ",
+    "description": "Get the perfect playlist for your current mood, complete with YouTube links for easy listening",
+    "version": "0.0.1",
+    "nodes": [
+      {
+        "id": "b3889e37-3282-497a-adc8-f8e31efcaeaf",
+        "type": "embed://a2/a2.bgl.json#module:render-outputs",
+        "metadata": {
+          "title": "Display Playlist",
+          "visual": {
+            "x": 1260,
+            "y": 420
+          },
+          "userModified": true
+        },
+        "configuration": {
+          "p-render-mode": "Webpage with auto-layout by 2.5 Pro",
+          "text": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Guidelines: Give the DJ set a clever 2-4 word title that reflects the mood of the set. Then show the cover image. Then merge the song list, youtube links, and DJ intros into a DJ set. Show the youtube links as a button to open on YouTube. Use a style that is appropriate for the overall mood and music preference: {{\"type\":\"in\",\"path\":\"b1ed28a1-80e2-48ec-9f95-828899461ddc\",\"title\":\"Music preferences\"}}\n\nContent:\ncover image: {{\"type\":\"in\",\"path\":\"8ba912c5-919b-409b-b955-bda1894084ca\",\"title\":\"Make Cover Image\"}}\nsong_list: {{\"type\":\"in\",\"path\":\"d2577eaf-0508-48d2-a265-831ceb1585b4\",\"title\":\"Generate Playlist\"}}\ndj_intros: {{\"type\":\"in\",\"path\":\"36607cbc-c7d1-41e8-891a-16b143c72eb5\",\"title\":\"Generate DJ Intros\"}} \nYoutube links (if there are multiple, extract exactly one):\n{{\"type\":\"in\",\"path\":\"66404ea4-4c4d-4177-81b0-292134931fc5\",\"title\":\"Fetch YouTube Links\"}}"
+              }
+            ]
+          },
+          "b-system-instruction": {
+            "role": "user",
+            "parts": [
+              {
+                "text": ""
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "d2577eaf-0508-48d2-a265-831ceb1585b4",
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "metadata": {
+          "title": "Generate Playlist",
+          "visual": {
+            "x": 460,
+            "y": 260
+          },
+          "userModified": true
+        },
+        "configuration": {
+          "config$ask-user": false,
+          "config$list": false,
+          "config$prompt": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "You are a seasoned music expert, a curator of sonic experiences. Your task is to generate a list of 5 songs based on the provided `music_preference`. The output should be an array of strings in valid JSON format, following this structure: `[ \"Song Title 1\", \"Song Title 2\", \"Song Title 3\", \"Song Title 4\", \"Song Title 5\" ]`. Base your selections only on your internal knowledge. Do not use Google search. Analyze the `music_preference` carefully, noting the specific genre, artist, mood, or any other relevant details. Brainstorm five songs that align with the `music_preference` you have identified. Verify that each of the five songs you have selected truly matches the `music_preference`. If not, go back and continue brainstorming.  Start directly with the output, do not output any delimiters. \n\n\n# Step by Step instructions\n1. Read the provided [music_preference] carefully, noting the specific genre, artist, mood, or any other relevant details.\n2. Brainstorm five songs that align with the [music_preference] you have identified.\n3. Verify that each of the five songs you have selected truly matches the [music_preference]. If not, go back to step 2 and continue brainstorming.\n4. Create an array of strings in valid JSON format, where each string represents the title of a song you have chosen. For example: `[ \"Song Title 1\", \"Song Title 2\", \"Song Title 3\", \"Song Title 4\", \"Song Title 5\" ]`. \n\n\n\n\nMusic Preference: \n\"\"\"\n{{\"type\":\"in\",\"path\":\"b1ed28a1-80e2-48ec-9f95-828899461ddc\",\"title\":\"Music preferences\"}}\n\"\"\"\nIMPORTANT NOTE: Start directly with the output, do not output any delimiters.\nTake a Deep Breath, read the instructions again, read the inputs again. Each instruction is crucial and must be executed with utmost care and attention to detail.\n\nOutput: \n\n```\n``` "
+              }
+            ]
+          },
+          "generation-mode": "text",
+          "b-system-instruction": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "You are working as part of an AI system, so no chit-chat and no explaining what you're doing and why.\nDO NOT start with \"Okay\", or \"Alright\" or any preambles. Just the output, please."
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "3820e028-f793-4595-8839-c5b3dccb0ade",
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "metadata": {
+          "title": "Design Cover Image",
+          "visual": {
+            "x": 460,
+            "y": 580
+          },
+          "userModified": true
+        },
+        "configuration": {
+          "config$ask-user": false,
+          "config$list": false,
+          "config$prompt": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Given the music preferences below, generate a brief description of a cover image that matches the mood of the music. Create something that a DJ or musician might put on a poster for their performance of this the style of music.\n\nMusic preferences: {{\"type\":\"in\",\"path\":\"b1ed28a1-80e2-48ec-9f95-828899461ddc\",\"title\":\"Music preferences\"}}"
+              }
+            ]
+          },
+          "generation-mode": "text",
+          "b-system-instruction": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "You are working as part of an AI system, so no chit-chat and no explaining what you're doing and why.\nDO NOT start with \"Okay\", or \"Alright\" or any preambles. Just the output, please."
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "8ba912c5-919b-409b-b955-bda1894084ca",
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "metadata": {
+          "title": "Make Cover Image",
+          "visual": {
+            "x": 840,
+            "y": 600
+          },
+          "userModified": false
+        },
+        "configuration": {
+          "config$ask-user": false,
+          "config$list": false,
+          "config$prompt": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "{{\"type\":\"in\",\"path\":\"3820e028-f793-4595-8839-c5b3dccb0ade\",\"title\":\"Design Cover Image\"}}"
+              }
+            ]
+          },
+          "generation-mode": "image-gen",
+          "p-aspect-ratio": "1:1",
+          "p-disable-prompt-rewrite": false
+        }
+      },
+      {
+        "id": "36607cbc-c7d1-41e8-891a-16b143c72eb5",
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "metadata": {
+          "title": "Generate DJ Intros",
+          "visual": {
+            "x": 780,
+            "y": 80
+          },
+          "userModified": true
+        },
+        "configuration": {
+          "config$ask-user": false,
+          "config$list": false,
+          "config$prompt": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "You are a witty and charismatic DJ, known for seamlessly weaving in interesting facts and creating unforgettable intros for every song. Your task is to generate a unique and engaging DJ intro for each song in the `song_list`, incorporating captivating facts from your internal knowledge base. Each intro should be tailored to the specific song, creating a dynamic and entertaining listening experience. Your output should be an array of strings in valid JSON format, ensuring each intro is clearly associated with its corresponding song in the playlist. \n\n\n# Step by Step Instructions\n1. Look at the input provided in `song_list`. This will be an array of strings, where each string represents the title of a song in the playlist.\n2. For each song in `song_list`, generate a witty and engaging DJ intro for the song, incorporating interesting facts from your internal knowledge base. Each intro should be unique and tailored to the specific song.\n3. Keep track of each intro in an array of strings.\n4. Ensure that the array of strings representing the intros is in valid JSON format.\n5. Output the JSON array of strings. \n\n\n\n\nInput: \n\"\"\"\n{{\"type\":\"in\",\"path\":\"d2577eaf-0508-48d2-a265-831ceb1585b4\",\"title\":\"Generate Playlist\"}}\n\"\"\"\nSong Facts: \n\"\"\"\n{{song_facts}}\n\"\"\"\nIMPORTANT NOTE: Start directly with the output, do not output any delimiters.\nTake a Deep Breath, read the instructions again, read the inputs again. Each instruction is crucial and must be executed with utmost care and attention to detail.\n\nOutput: \n```\n```"
+              }
+            ]
+          },
+          "generation-mode": "text"
+        }
+      },
+      {
+        "id": "66404ea4-4c4d-4177-81b0-292134931fc5",
+        "type": "embed://a2/generate.bgl.json#module:main",
+        "metadata": {
+          "title": "Fetch YouTube Links",
+          "visual": {
+            "x": 840,
+            "y": 260
+          },
+          "userModified": false
+        },
+        "configuration": {
+          "config$list": false,
+          "config$prompt": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "For each song in {{\"type\":\"in\",\"path\":\"d2577eaf-0508-48d2-a265-831ceb1585b4\",\"title\":\"Generate Playlist\"}}:\n- Use  {{\"type\":\"tool\",\"path\":\"embed://a2/tools.bgl.json#module:search-web\",\"title\":\"Search Web\"}} to find a YouTube link for the song. \n- From the web results, extract *exactly* one link which is a functioning youtube link for playing the song. Return only the song link and the song title with no other context."
+              }
+            ]
+          },
+          "generation-mode": "think",
+          "strategy": "All at once"
+        }
+      },
+      {
+        "id": "b1ed28a1-80e2-48ec-9f95-828899461ddc",
+        "type": "embed://a2/a2.bgl.json#21ee02e7-83fa-49d0-964c-0cab10eafc2c",
+        "metadata": {
+          "title": "Music preferences",
+          "visual": {
+            "x": 40,
+            "y": 420
+          },
+          "userModified": true
+        },
+        "configuration": {
+          "description": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Describe the style or genre of music you are looking for. Or just tell me your mood!"
+              }
+            ]
+          },
+          "p-modality": "Any"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "3820e028-f793-4595-8839-c5b3dccb0ade",
+        "to": "8ba912c5-919b-409b-b955-bda1894084ca",
+        "out": "context",
+        "in": "context"
+      },
+      {
+        "from": "8ba912c5-919b-409b-b955-bda1894084ca",
+        "to": "b3889e37-3282-497a-adc8-f8e31efcaeaf",
+        "out": "context",
+        "in": "p-z-8ba912c5-919b-409b-b955-bda1894084ca"
+      },
+      {
+        "from": "36607cbc-c7d1-41e8-891a-16b143c72eb5",
+        "to": "b3889e37-3282-497a-adc8-f8e31efcaeaf",
+        "out": "context",
+        "in": "p-z-36607cbc-c7d1-41e8-891a-16b143c72eb5"
+      },
+      {
+        "from": "d2577eaf-0508-48d2-a265-831ceb1585b4",
+        "to": "b3889e37-3282-497a-adc8-f8e31efcaeaf",
+        "out": "context",
+        "in": "p-z-d2577eaf-0508-48d2-a265-831ceb1585b4"
+      },
+      {
+        "from": "d2577eaf-0508-48d2-a265-831ceb1585b4",
+        "to": "36607cbc-c7d1-41e8-891a-16b143c72eb5",
+        "out": "context",
+        "in": "p-z-d2577eaf-0508-48d2-a265-831ceb1585b4"
+      },
+      {
+        "from": "3820e028-f793-4595-8839-c5b3dccb0ade",
+        "to": "8ba912c5-919b-409b-b955-bda1894084ca",
+        "out": "context",
+        "in": "p-z-3820e028-f793-4595-8839-c5b3dccb0ade"
+      },
+      {
+        "from": "d2577eaf-0508-48d2-a265-831ceb1585b4",
+        "to": "66404ea4-4c4d-4177-81b0-292134931fc5",
+        "out": "context",
+        "in": "p-z-d2577eaf-0508-48d2-a265-831ceb1585b4"
+      },
+      {
+        "from": "66404ea4-4c4d-4177-81b0-292134931fc5",
+        "to": "b3889e37-3282-497a-adc8-f8e31efcaeaf",
+        "out": "context",
+        "in": "p-z-66404ea4-4c4d-4177-81b0-292134931fc5"
+      },
+      {
+        "from": "b1ed28a1-80e2-48ec-9f95-828899461ddc",
+        "to": "d2577eaf-0508-48d2-a265-831ceb1585b4",
+        "out": "context",
+        "in": "p-z-b1ed28a1-80e2-48ec-9f95-828899461ddc"
+      },
+      {
+        "from": "b1ed28a1-80e2-48ec-9f95-828899461ddc",
+        "to": "3820e028-f793-4595-8839-c5b3dccb0ade",
+        "out": "context",
+        "in": "p-z-b1ed28a1-80e2-48ec-9f95-828899461ddc"
+      },
+      {
+        "from": "b1ed28a1-80e2-48ec-9f95-828899461ddc",
+        "to": "b3889e37-3282-497a-adc8-f8e31efcaeaf",
+        "out": "context",
+        "in": "p-z-b1ed28a1-80e2-48ec-9f95-828899461ddc"
+      }
+    ]
+  }

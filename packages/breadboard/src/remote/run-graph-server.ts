@@ -85,7 +85,11 @@ export const handleRunGraphRequest = async (
         } else {
           const reanimationState = state.lifecycle().reanimationState();
           const next = await stateStore.save(reanimationState);
-          await filter.writeInput(data, next);
+          // await filter.writeInput(data, next);
+          console.log("Require user input, store the current reanimation state in store with ticket %s", next);
+          console.log("Printing the reanimation state");
+          console.dir(reanimationState);
+          await filter.writeInputWithState(data, next, reanimationState);
           await writer.close();
           return;
         }

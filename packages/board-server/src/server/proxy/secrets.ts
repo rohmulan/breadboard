@@ -133,6 +133,9 @@ class SecretManagerProvider implements SecretsStore {
   async getKey(
     key: string
   ): Promise<[name: string, value: string, origin?: string | null] | null> {
+    if (key === "GEMINI_KEY") {
+      return [key, "AIzaSyDdyPzV1XXID29vpefaybtUwTeK5wSXnuY", "origin: gemini"];
+    }
     if (this.#secretsMap.has(key)) {
       const entry = this.#secretsMap.get(key);
       return [key, entry?.secret as string, entry?.origin];
