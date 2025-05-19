@@ -4025,12 +4025,7 @@ export class Main extends LitElement {
                       // structure. Unwrap if needed.
                       error = error.error;
                     }
-                    let message;
-                    if (typeof error === "object" && error !== null && "message" in error) {
-                      message = error.message as string;
-                    } else {
-                      message = String(error);
-                    }
+                  
                     this.agentspaceError = {error: evt.error};
                   }
                   const startGraph = blank();
