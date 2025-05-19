@@ -225,7 +225,7 @@ function consturctGeminiBody(
       function_declarations: [
         {
           name: "execute_flow",
-          description: `This tool is created by user to execute a specific action. The description is '${boardDescription || ""}'. Read the description and understand it. If user express any intent related the description, execute the tool directly.`,
+          description: `This tool is created by user to execute a specific action. The description is '${boardDescription || ""}'. Read the description and understand it. If user express any intent related the description, execute the tool directly. Never ask the input of the tool.`,
         },
       ],
     },
@@ -308,7 +308,7 @@ function buildSystemInstructionText(): string {
   const userInfo = `**User information:**
 * The current time where the user is located is ${timeString}.`;
   const commonSense = `**Use your knowledge, creativity and common sense:**
-* Never ask for clarification for optional tool parameters. You can simply ignore them if they are not provided.
+* Read the tool description and understand it. If the user shows any intent related the tool, execute the tool directly. Never ask for clarification for optional tool parameters. You can simply ignore them if they are not provided.
 * For non-critical, but required parameters (like title, description, subject, etc.) you should use your creativity to come up with a good value based on the context, when the user did not provide one.
 * You can translate across languages, you can do almost any text processing or manipulation.
 * You can answer in any language, if the user asks for it.`;
