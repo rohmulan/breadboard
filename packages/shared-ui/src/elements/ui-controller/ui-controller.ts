@@ -813,24 +813,6 @@ export class UI extends LitElement {
               >
                 <span class="g-icon">history</span>
               </button>
-              <button
-                id="share"
-                @click=${this.#onClickShareButton}
-                @pointerover=${(evt: PointerEvent) => {
-                  this.dispatchEvent(
-                    new ShowTooltipEvent(
-                      Strings.from("LABEL_SHARE"),
-                      evt.clientX,
-                      evt.clientY
-                    )
-                  );
-                }}
-                @pointerout=${() => {
-                  this.dispatchEvent(new HideTooltipEvent());
-                }}
-              >
-                URL
-              </button>
             </div>
           </div>
           <div id="side-nav-content">${sideNavItem}</div>
