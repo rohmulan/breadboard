@@ -132,39 +132,56 @@ function endpointURL(model?: string) {
   return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 }
 
+export async function extractInformation(conversationContext: LLMContent[], informationKey: string, accessToken: string): Promise<string | undefined> {
+  const finalContext = [...conversationContext];
+  finalContext.push({
+    role: "user",
+    parts: [
+      {
+        text: `Based on our conversation history, has the user provided information for "${informationKey}"? If so, extract it. If not, state "User has not provided the information for ${informationKey} yet."`
+      }
+    ]
+  });
+  const requestInit: RequestInit = {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  };
+  requestInit.body = JSON.stringify(
+    consturctGeminiBodyToExtractInformation(finalContext, informationKey)
+  );
+  const url = endpointURL("gemini-2.0-flash");
+  const data = await fetch(url, requestInit);
+  if (!data.ok) {
+    return undefined;
+  } else {
+    const res = (await data.json()) as GeminiAPIOutputs;
+    const candidate = res.candidates?.at(0);
+    if (!candidate) {
+      return undefined;
+    }
+    const content = candidate.content;
+    const textData = (content?.parts[0] as TextCapabilityPart).text;
+    console.log("Print text data from Gemini %s", textData);
+    try {
+      const cleanedText = textData.replace(/```json\n?|```/g, '').trim();
+      const parsedJsonData = JSON.parse(cleanedText);
+      if (parsedJsonData.found) {
+        return parsedJsonData.value;
+      } else {
+        return undefined;
+      }
+    } catch(error) {
+      console.error(error);
+      return undefined;
+    }
+  }
+}
+
 export async function gemini(
   userInputContext: LLMContent[],
   boardDescription: string,
   accessToken: string,
 ): Promise<GeminiAPIOutputs> {
-  // console.log("Start fetching from gemini API");
-  //Manually build userInputContext for testing purpose
-  // userInputContext = [
-  //   {
-  //     role: "user",
-  //     parts: [
-  //       {
-  //         text: "What is the time right now",
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     role: "model", 
-  //     parts: [
-  //       {
-  //         text: "The current time is Thu May 08 2025.",
-  //       },
-  //     ],
-  //   },
-  //   {
-  //       role: "user", 
-  //       parts: [
-  //         {
-  //           text: "Do you know the exact time, including hours, minutes, and seconds?",
-  //         },
-  //       ],
-  //     },
-  // ];
   const requestInit: RequestInit = {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -248,6 +265,43 @@ function consturctGeminiBody(
   return body;
 }
 
+function consturctGeminiBodyToExtractInformation(
+  conversationContext: LLMContent[],
+  informationKey: string
+): GeminiBody {
+  const systemInstruction: LLMContent = {
+    parts: [
+      {
+        text: buildInformationExtractionSystemInstruction(informationKey),
+      },
+    ],
+  };
+  const safetySettings: SafetySetting[] = [
+    {
+      category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+      threshold: "BLOCK_NONE",
+    },
+    {
+      category: "HARM_CATEGORY_HATE_SPEECH",
+      threshold: "BLOCK_NONE",
+    },
+    {
+      category: "HARM_CATEGORY_HARASSMENT",
+      threshold: "BLOCK_NONE",
+    },
+    {
+      category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+      threshold: "BLOCK_NONE",
+    },
+  ];
+  const body: GeminiBody = {
+    contents: conversationContext,
+    systemInstruction: systemInstruction,
+    safetySettings: safetySettings,
+  };
+  return body;
+}
+
 function buildSystemInstructionText(): string {
   const now = new Date();
   const timeString = now.toDateString();
@@ -268,3 +322,269 @@ function buildSystemInstructionText(): string {
   const systemInstruction = `${userInfo}\n${commonSense}\n${commonPatterns}`;
   return systemInstruction;
 }
+
+function buildInformationExtractionSystemInstruction(informationKey: string): string {
+  const informationExtractionInstruction = `You are an intelligent information extraction system. Your sole task is to analyze the provided conversation history and extract the specific piece of information requested.
+
+The conversation history will be provided as a list of message objects, similar to the 'contents' field in a Gemini API request. Each object has a 'role' (either "user" or "model") and 'parts' (a list of content parts, where each part has a 'text' field).
+
+The specific piece of information you are looking for is: "**${informationKey}**".
+
+Task:
+1. **Identify relevant messages:** Only consider messages where the \`role\` is "user". Ignore messages from the "model".
+2. **Scan for the information (from latest to oldest):** Read the \`text\` content of user messages *starting from the most recent message and going backwards through the history*. Pay close attention to statements that define or describe the user's intent or requirements for the requested information.
+3. **Extract the *first* match found from the latest user message, or state absence:**
+    - If you find the information corresponding to "**${informationKey}**" in *any* user message, extract *only* that specific piece of information from the *latest occurring* user message that contains it. Do not include any other text or conversational filler.
+    - If the information for "**${informationKey}**" is *not* found in any user message, you must indicate its absence.
+
+Output Format:
+**ALWAYS output valid JSON. DO NOT include markdown code block delimiters (e.g., \`\`\`json or \`\`\`). Your response must start directly with '{' and end with '}'.**
+
+If information is found:
+\`\`\`json
+{
+  "key": "${informationKey}",
+  "value": "extracted information",
+  "found": true
+}
+\`\`\`
+
+If information is not found:
+\`\`\`json
+{
+  "key": "${informationKey}",
+  "value": null,
+  "found": false,
+  "reason": "User has not provided the information for ${informationKey} yet."
+}
+\`\`\`
+
+Examples (these examples simulate the 'contents' field from the generateContent request):
+
+---
+Example 1: Information found (for "business_name")
+
+Contents:
+\`\`\`json
+[
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "My company is called 'Acme Corporation'."
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "text": "Thank you for that."
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "What are your services?"
+      }
+    ]
+  }
+]
+\`\`\`
+
+Output:
+{
+  "key": "business_name",
+  "value": "Acme Corporation",
+  "found": true
+}
+
+---
+Example 2: Information not found (for "order_number")
+
+Contents:
+\`\`\`json
+[
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "I need help with my order."
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "text": "Can you provide your order number?"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "I forgot it."
+      }
+    ]
+  }
+]
+\`\`\`
+
+Output:
+{
+  "key": "order_number",
+  "value": null,
+  "found": false,
+  "reason": "User has not provided the information for order_number yet."
+}
+
+---
+Example 3: Information found with other text (for "shipping_address")
+
+Contents:
+\`\`\`json
+[
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "Please ship it to 123 Main Street, Anytown, CA 90210."
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "text": "Got it."
+      }
+    ]
+  }
+]
+\`\`\`
+
+Output:
+{
+  "key": "shipping_address",
+  "value": "123 Main Street, Anytown, CA 90210",
+  "found": true
+}
+
+---
+Example 4: No clear key reference, but information is present (for "email_address")
+
+Contents:
+\`\`\`json
+[
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "My email is john.doe@example.com, please use that for communication."
+      }
+    ]
+  }
+]
+\`\`\`
+
+Output:
+{
+  "key": "email_address",
+  "value": "john.doe@example.com",
+  "found": true
+}
+
+---
+Example 5: Extracting 'code description' from the provided conversation.
+
+Contents:
+\`\`\`json
+[
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "I want to write some python code to get current local time in string format",
+        },
+      ],
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "What is the time right now",
+        },
+      ],
+    },
+    {
+      "role": "model",
+    "parts": [
+        {
+          "text": "The current time is Thu May 08 2025.",
+        },
+      ],
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "Do you know the exact time, including hours, minutes, and seconds?",
+        },
+      ],
+    }
+]
+\`\`\`
+
+Output:
+{
+  "key": "code description",
+  "value": "get current local time in string format",
+  "found": true
+}
+
+---
+**Example 6: Latest match prioritization (for "what image do you want to generate")**
+
+Contents:
+\`\`\`json
+[
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "Please generate an image of a cat."
+      }
+    ]
+  },
+  {
+    "role": "model",
+    "parts": [
+      {
+        "text": "Okay, a cat image."
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "Actually, I changed my mind. Generate an image of a dog instead."
+      }
+    ]
+  }
+]
+\`\`\`
+
+Output:
+{
+  "key": "what image do you want to generate",
+  "value": "dog",
+  "found": true
+}
+`;
+    return informationExtractionInstruction;
+  }
