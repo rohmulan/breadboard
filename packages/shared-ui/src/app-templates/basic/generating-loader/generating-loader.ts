@@ -36,6 +36,7 @@ export class GeneratingLoader extends LitElement {
   }
 
   @property() accessor currentText = 'Generating';
+  @property() accessor lines = 3;
 
   @state() accessor isFadingIn = false;
 
@@ -47,7 +48,25 @@ export class GeneratingLoader extends LitElement {
     undefined,
   );
 
-  render() {
+  // render() {
+  //   return html`
+  //     <div class="main">
+  //       <div class="header">
+  //          <span
+  //           class="text-container ${classMap({
+  //             'fade-in': this.isFadingIn,
+  //             'fade-out': this.isFadingOut,
+  //           })}"
+  //           >${this.currentText}...</span
+  //         >
+  //       </div>
+  //       <span class="first-line skeleton-loader"></span>
+  //       <span class="second-line skeleton-loader"></span>
+  //     </div>
+  //   `;
+  // }
+
+  override render() {
     return html`
       <div class="main">
         <div class="header">
@@ -56,12 +75,17 @@ export class GeneratingLoader extends LitElement {
               'fade-in': this.isFadingIn,
               'fade-out': this.isFadingOut,
             })}"
-            >${this.currentText}...</span
-          >
+            >${this.currentText}...
+          </span>
         </div>
-        <span class="first-line skeleton-loader"></span>
-        <span class="second-line skeleton-loader"></span>
+      <div class="text-line-loader">
+      ${Array.from({ length: this.lines }).map(
+        () => html`
+          <div class="text-line-skeleton skeleton" part="skeleton"></div>
+        `,
+      )}
       </div>
+    </div>
     `;
   }
 
