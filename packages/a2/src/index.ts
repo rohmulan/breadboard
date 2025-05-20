@@ -8,7 +8,7 @@ import {
   EmbeddedBoardServer,
   isFromEmbeddedServer,
 } from "@breadboard-ai/embedded-board-server";
-import type { BoardServer, GraphDescriptor } from "@google-labs/breadboard";
+import { BoardServer, GraphDescriptor } from "@google-labs/breadboard";
 
 // Add new exports here.
 import a2 from "../bgl/a2.bgl.json" with { type: "json" };

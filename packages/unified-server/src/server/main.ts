@@ -8,7 +8,7 @@ import { InputValues, NodeDescriptor } from "@breadboard-ai/types";
 const server = express();
 
 const boardServerConfig = boardServer.createServerConfig({
-  storageProvider: "application-integration",
+  storageProvider: "in-memory",
 });
 const connectionServerConfig = await connectionServer.createServerConfig();
 
