@@ -16,6 +16,8 @@ import type { RunBoardArguments } from "../../types.js";
 import { BoardServerProvider } from "./board-server-provider.js";
 import { createKits, registerLegacyKits } from "./create-kits.js";
 import { NodeSandbox } from "@breadboard-ai/jsandbox/node";
+import { createA2Server } from "../../../../../a2/src/index.js";
+
 
 export const timestamp = () => globalThis.performance.now();
 
@@ -46,7 +48,11 @@ export const runBoard = async ({
   const boardServerProvider = new BoardServerProvider(serverUrl, path, loader);
   await boardServerProvider.ready();
 
-  const runLoader = createLoader([boardServerProvider]);
+  // Create A2 server
+  const a2Server = createA2Server();
+  await a2Server.ready();
+
+  const runLoader = createLoader([boardServerProvider, a2Server]);
   const runKits = createKits(kitOverrides);
   // This might be the place we should provide embeded server..
   const graphStore = createGraphStore({
