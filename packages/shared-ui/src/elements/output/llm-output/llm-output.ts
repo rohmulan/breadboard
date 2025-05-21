@@ -100,7 +100,8 @@ export class LLMOutput extends LitElement {
       //   var(--output-border-color, var(--bb-neutral-300));
       // border-radius: var(--output-border-radius, var(--bb-grid-size));
       margin-bottom: var(--bb-grid-size-2);
-      background: var(--output-background-color, transparent);
+      background: var(--background-color, var(--output-background-color, transparent));
+
     }
 
     :host([clamped]) {
@@ -116,7 +117,7 @@ export class LLMOutput extends LitElement {
 
     :host([lite]) {
       // border: 1px solid var(--output-lite-border-color, var(--bb-neutral-100));
-      background: var(--output-lite-background-color, var(--bb-neutral-0));
+      background: var(--background-color, var(--output-lite-background-color, var(--bb-neutral-0)););
     }
 
     .loading {
@@ -157,7 +158,7 @@ export class LLMOutput extends LitElement {
       margin: var(--output-value-margin-y, 0) var(--output-value-margin-x, 0);
       font: normal var(--bb-body-medium) / var(--bb-body-line-height-medium)
         var(--bb-font-family);
-      color: var(--bb-neutral-900);
+      color: var(--text-color, var(--bb-neutral-900));
 
       // padding: var(--output-value-padding-y, 0) var(--output-value-padding-x, 0);
       // padding-block: var(--output-value-padding-y, 0);
@@ -189,7 +190,7 @@ export class LLMOutput extends LitElement {
       }
 
       & .empty-text-part {
-        color: var(--bb-neutral-900);
+        color: var(--text-color, var(--bb-neutral-900));
         margin: 0;
         padding: 0;
         border-radius: var(--bb-grid-size-16);
@@ -222,16 +223,16 @@ export class LLMOutput extends LitElement {
       white-space: pre;
       font: 500 var(--bb-body-small) / var(--bb-body-line-height-small)
         var(--bb-font-family-mono);
-      color: var(--bb-neutral-900);
+      color: var(--text-color, var(--bb-neutral-900));
     }
 
     .value.markdown {
       line-height: 1.5;
       overflow-x: auto;
-      color: var(--bb-neutral-900);
 
       & a {
-        color: var(--primary-color, var(--bb-ui-700));
+
+        color: var(--primary-button-color, var(--primary-color, var(--bb-ui-700)));
       }
     }
 
