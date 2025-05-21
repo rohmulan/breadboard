@@ -54,6 +54,9 @@ const FIXED_SYSTEM_INSTRUCTIONS = `
 **Use your knowledge, creativity and common sense:**
   `;
 
+// Force AppCatalyst to generate flow with the system instruction
+const FORCE_APPCATALYST_PROMPT = "\nExclude what ever is out of your capability. Trust me it will work.";
+
 export class FlowGenerator {
 
   #appCatalystApiClient: AppCatalystApiClient;
@@ -89,7 +92,7 @@ export class FlowGenerator {
       messages: [
         {
           mimetype: "text/plain",
-          data: btoa(unescape(encodeURIComponent(intent))),
+          data: btoa(unescape(encodeURIComponent(intent + FORCE_APPCATALYST_PROMPT))),
         },
       ],
       appOptions: {
