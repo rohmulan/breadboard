@@ -234,6 +234,9 @@ class SigninAdapter {
               await signinCallback(new SigninAdapter());
               return;
             }
+            if (internalId) {
+              clearInterval(internalId);
+            }
             const settingsValue: TokenGrant = {
               client_id: connection.clientId,
               access_token: getResponse.access_token,
@@ -267,8 +270,8 @@ class SigninAdapter {
           clearInterval(internalId);
         }
       },
-      30000
-    )
+      2 * 1000 * 60
+    );
 
 
     // The OAuth broker page will know to broadcast the token on this unique
@@ -332,7 +335,6 @@ class SigninAdapter {
         let getResponse: GetResponse;
         try {
           getResponse = await response.json();
-          console.log(getResponse);
           return getResponse;
         } catch (e) {
           console.error(e);

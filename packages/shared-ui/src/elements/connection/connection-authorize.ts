@@ -5,13 +5,14 @@
  */
 
 import { css, html, LitElement, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { AuthorizeEvent } from "../../events/events";
 import { SigninAdapter } from "../../utils/signin-adapter";
+import { icons } from "../../styles/icons";
 
 @customElement("bb-connection-authorize-view")
 export class ConnectionAuthorizeView extends LitElement {
-  static styles = css`
+  static styles = [icons, css`
     @keyframes fadeAndZoomIn {
       from {
         opacity: 0;
@@ -104,13 +105,35 @@ export class ConnectionAuthorizeView extends LitElement {
       background-color: var(--bb-ui-600);
       outline: none;
     }
-  `;
+
+   
+    .spin {
+      animation: spin 1.5s linear infinite;
+    }
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spin-icon {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 16px;
+      color: #3271ea;
+    }
+  `];
 
   private async _handleAuthorize() {
     if (!this.adapter) {
       return;
     }
 
+    this.buttonClicked = true;
     const url = await this.adapter.getSigninUrl();
     window.open(url, '_blank');
 
@@ -123,8 +146,15 @@ export class ConnectionAuthorizeView extends LitElement {
     });
   }
 
+  private _reset() {
+    this.buttonClicked = false;
+  }
+
   @property()
   accessor adapter: SigninAdapter | null = null;
+
+  @state()
+  accessor buttonClicked = false;
 
   render() {
     if (!this.adapter) {
@@ -149,9 +179,18 @@ export class ConnectionAuthorizeView extends LitElement {
         </p>
         <p>Please grant permission to continue.</p>
         <div class="authorize-container">
-          <button class="authorize-button" @click=${this._handleAuthorize}>
-            Authorize
-          </button>
+          ${!this.buttonClicked? html `
+                  <button class="authorize-button" @click=${this._handleAuthorize}>
+                    Authorize
+                  </button>
+            `: html `
+                   <div class="spin-icon">
+                          <span class="g-icon spin">progress_activity</span>
+                   </div>
+                   <button class="authorize-button" @click=${this._reset}>
+                    Reset
+                  </button>
+            `}
         </div>
       </div>
     `;
