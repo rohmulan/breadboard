@@ -1263,22 +1263,26 @@ export class EntityEditor extends SignalWatcher(LitElement) {
         }
       }
 
+      const showEdit = this.graph  
+                        ? html`<bb-flowgen-in-step-button
+                            monochrome
+                            popoverPosition="below"
+                            .label=${Strings.from("COMMAND_DESCRIBE_EDIT_STEP")}
+                            .currentGraph=${this.graph.raw() satisfies GraphDescriptor}
+                            .constraint=${{
+                              kind: "EDIT_STEP_CONFIG",
+                              stepId: nodeId,
+                            } satisfies FlowGenConstraint}
+                          ></bb-flowgen-in-step-button>`
+                        : nothing;
+      const disableEdit = true;
+
       let controls: HTMLTemplateResult | symbol = nothing;
       if (isControllerBehavior(port.schema)) {
         controls = html`<div id="controls-container">
           <div id="controls">
-            ${this.graph
-              ? html`<bb-flowgen-in-step-button
-                  monochrome
-                  popoverPosition="below"
-                  .label=${Strings.from("COMMAND_DESCRIBE_EDIT_STEP")}
-                  .currentGraph=${this.graph.raw() satisfies GraphDescriptor}
-                  .constraint=${{
-                    kind: "EDIT_STEP_CONFIG",
-                    stepId: nodeId,
-                  } satisfies FlowGenConstraint}
-                ></bb-flowgen-in-step-button>`
-              : nothing}
+          <!-- (TODO) Remove the edit inside the entity editor right now. Add back later.  -->
+            ${disableEdit? nothing: showEdit}
             ${hasTextEditor
               ? html`<button
                   id="tools"
