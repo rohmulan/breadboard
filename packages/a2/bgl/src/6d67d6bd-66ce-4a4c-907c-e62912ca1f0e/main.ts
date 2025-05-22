@@ -33,13 +33,6 @@ const MODES = [
     icon: "generative-text",
   },
   {
-    id: "think",
-    url: "embed://a2/go-over-list.bgl.json#module:main",
-    title: "Plan and Execute with Gemini 2.0 Flash",
-    description: "Plans and executes complex tasks",
-    icon: "generative",
-  },
-  {
     id: "image-gen",
     url: "embed://a2/a2.bgl.json#module:image-generator",
     title: "Imagen 3",

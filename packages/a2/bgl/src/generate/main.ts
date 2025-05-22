@@ -63,15 +63,6 @@ const MODES: Mode[] = [
     modelName: "gemini-2.5-pro-preview-03-25",
   },
   {
-    id: "think",
-    type: "think",
-    url: "embed://a2/go-over-list.bgl.json#module:main",
-    title: "Plan and Execute with Gemini 2.0 Flash",
-    description: "Plans and executes complex tasks",
-    icon: "spark",
-    modelName: "gemini-2.0-flash",
-  },
-  {
     id: "image-gen",
     type: "image-gen",
     url: "embed://a2/a2.bgl.json#module:image-generator",
