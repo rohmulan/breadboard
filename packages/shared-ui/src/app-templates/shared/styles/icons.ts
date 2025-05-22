@@ -487,6 +487,7 @@ export default css`
 
   @scope (.app-template.dark) {
     :scope {
+      --bb-loader-opacity: 0.5;
       --bb-progress: url(/images/progress-inverted.svg);
 
       --bb-icon-add: url(/third_party/icons/add-inverted.svg);

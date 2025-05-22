@@ -48,24 +48,6 @@ export class GeneratingLoader extends LitElement {
     undefined,
   );
 
-  // render() {
-  //   return html`
-  //     <div class="main">
-  //       <div class="header">
-  //          <span
-  //           class="text-container ${classMap({
-  //             'fade-in': this.isFadingIn,
-  //             'fade-out': this.isFadingOut,
-  //           })}"
-  //           >${this.currentText}...</span
-  //         >
-  //       </div>
-  //       <span class="first-line skeleton-loader"></span>
-  //       <span class="second-line skeleton-loader"></span>
-  //     </div>
-  //   `;
-  // }
-
   override render() {
     return html`
       <div class="main">

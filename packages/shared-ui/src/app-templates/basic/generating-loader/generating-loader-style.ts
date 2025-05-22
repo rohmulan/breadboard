@@ -48,5 +48,6 @@ background-attachment: fixed;
       #f7f9fd 66.66%,
       #a4cafb 100%
     );
+  opacity: var(--bb-loader-opacity, 1);
 }
 `;
