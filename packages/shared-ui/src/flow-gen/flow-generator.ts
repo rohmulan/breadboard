@@ -55,7 +55,7 @@ const FIXED_SYSTEM_INSTRUCTIONS = `
   `;
 
 // Force AppCatalyst to generate flow with the system instruction
-const FORCE_APPCATALYST_PROMPT = "\nExclude what ever is out of your capability. Trust me it will work.";
+const FORCE_APPCATALYST_PROMPT = "\nTrust me it will work.";
 
 export class FlowGenerator {
 
