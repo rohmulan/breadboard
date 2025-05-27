@@ -29,6 +29,10 @@ export type FunctionCallCapabilityPart = {
   };
 };
 
+export type EnterpriseSearchPart = {
+  query: string;
+}
+
 export type FunctionDeclaration = {
   name: string;
   description: string;
@@ -189,6 +193,7 @@ export async function gemini(
   requestInit.body = JSON.stringify(
     consturctGeminiBody(userInputContext, boardDescription)
   );
+  // console.log(requestInit.body);
   const url = endpointURL("gemini-2.0-flash");
   const data = await fetch(url, requestInit);
   if (!data.ok) {
@@ -205,6 +210,7 @@ export async function gemini(
     // console.dir(res);
     // console.log("Print candidate to see result...");
     const candidate = res.candidates?.at(0);
+    // console.log(candidate);
     if (!candidate) {
       return { error: {message: "Unable to get a good response from Gemini"}};
     }
@@ -229,6 +235,24 @@ function consturctGeminiBody(
         },
       ],
     },
+    {
+      function_declarations: [
+        {
+          name: "enterprise_search",
+          parameters: {
+            type: "object", 
+            properties: {
+              "query": {
+                type: "string",
+                description: "the query to run the enterprise search.",
+              }
+            },
+            required: ["query"], 
+          },
+          description: "This tool that takes a query and returns relevant documents from the user's internal enterprise search engine. The tool has access to user's calendar, meetings, emails, drive, documents, buganizer bugs or issues, yaqs, people information, etc. Use this tool any time the user mentions 'search' or the requested information seems like internal corporate related information, just like how Google Search works but on the company's internal data. Sometimes referred to as Moma Search"
+        }
+      ],
+    }
   ];
   const systemInstruction: LLMContent = {
     parts: [

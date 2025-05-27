@@ -1087,12 +1087,22 @@ export class Template extends LitElement implements AppTemplate {
         if (this.#ifNeedToTriggerFlow(llmContent)) {
           this.#startFlow();
         } else {
-
-          this.conversationList.push({
-            model: this.#renderManualLLmOutput(llmOutput),
-          })
-          this.requestUpdate();
+          const searchQuery = this.#ifNeedToRunEnterpriseSearch(llmContent);
+          if (!!searchQuery) {
+            const searchResult =  await this.#conversationManager.doEnterpriseSearch(searchQuery);
+            this.conversationList.push({
+              model: this.#renderManualLLmOutput(searchResult),
+            })
+            this.requestUpdate();
+          } else {
+            this.conversationList.push({
+              model: this.#renderManualLLmOutput(llmOutput),
+            })
+            this.requestUpdate();
+          }
         }
+        
+      
       }
     }
     
@@ -1129,14 +1139,37 @@ export class Template extends LitElement implements AppTemplate {
     }
     if (output.parts && output.parts.length > 0) {
       const anyTrue = output.parts.find((part) => {
-        if (!!((part as FunctionCallCapabilityPart).functionCall)) {
+        const functionalCall = (part as FunctionCallCapabilityPart).functionCall;
+        if (!!(functionalCall) && functionalCall.name === 'execute_flow') {
           return true;
         }
       });
       return !!anyTrue
     }
     return false;
-  } 
+  }
+  
+  #ifNeedToRunEnterpriseSearch(output: GeminiLLMContent | undefined): string {
+    if (!output) {
+      return '';
+    }
+    if (output.parts && output.parts.length > 0) {
+      const anyResult = output.parts.map((part) => {
+        const functionalCall = (part as FunctionCallCapabilityPart).functionCall;
+        if (!!(functionalCall) && functionalCall.name === 'enterprise_search') {
+          if ('query' in functionalCall.args) {
+            return functionalCall.args.query;
+          }
+          return '';
+        }
+      }).filter((query) => !!query);
+      if (anyResult && anyResult.length > 0) {
+        return anyResult[0] as string;
+      }
+      return '';
+    }
+    return '';
+  }
 
   async #reset() {
     this.eventsQueue = [];
@@ -1323,7 +1356,9 @@ export class Template extends LitElement implements AppTemplate {
     async #LLMCanProvideAnswer(question?: string): Promise<[string, string] | undefined> {
       // Hardcode for now to answer any question. 
       if (question) {
+        this.waitingLLMOutput = true;
         const result = await this.#conversationManager.extractInput(question);
+        this.waitingLLMOutput = false;
         if (result) {
           return [question, result];
         }

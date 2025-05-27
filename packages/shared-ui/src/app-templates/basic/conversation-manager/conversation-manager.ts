@@ -3,6 +3,7 @@ import {
   } from "@google-labs/breadboard";
   import {gemini, LLMContent, extractInformation, GeminiAPIOutputs, TextCapabilityPart} from "../gemini/gemini.js";
 import { TokenVendor } from "@breadboard-ai/connection-client";
+import { search } from "../enterprise-search/enterprise-search.js";
 
 
 const INTRODUCTION_PROMPT = "Introduce yourself and start the conversation.";
@@ -21,6 +22,25 @@ export class ConversationManager {
         if (tokenVendor) {
             this.#tokenVendor = tokenVendor;
         }
+    }
+
+    async doEnterpriseSearch(userInput: string) {
+      this.#chatHistory.push({role: 'user', parts: [{text: userInput}]});
+      const result =   await search(userInput, await this.getAccessToken());
+      if (!result || result.error) {
+        // error handling!!!
+        console.log(result?.error);
+        return result;
+    } else {
+        // happy path;
+        const output = result.candidates? result.candidates[0]?.content: undefined;
+        console.log(output);
+        if (output) {
+            this.#chatHistory.push(output);
+            return result;
+        }
+        return result;
+    }
     }
 
     // Introduction is not stored in the chat history. 
