@@ -4027,8 +4027,8 @@ export class Main extends LitElement {
                     }
                   
                     this.agentspaceError = {error: evt.error};
-                    // window.parent.postMessage(error);
-                    // return;
+                    window.parent.postMessage(error);
+                    return;
                   }
                   const startGraph = blank();
                   updateFlowBasedOnContext(startGraph, this.agentspaceUrl);
