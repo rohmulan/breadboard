@@ -245,7 +245,12 @@ function consturctGeminiBody(
             properties: {
               "query": {
                 type: "string",
-                description: "the query to run the enterprise search.",
+                description: `The query to run the enterprise search. Inside query, we need to know which entities user want to search. Entities includes: alendar, meetings, emails, drive, documents, buganizer bugs or issues, yaqs, people information. If the user mentioned any related people, please include into the query.`,
+// description: `
+//              A search query string. This query should be formulated to explicitly include:
+//              1.  Target entities to search within (e.g., calendar, meetings, emails, drive, documents, buganizer bugs or issues, yaqs, people information).
+//              2.  Any specific people mentioned as relevant to the search (e.g., 'from John Doe', 'shared by Jane Smith', 'meeting with Marketing team').
+//              The query should also incorporate the core subject or keywords from the user's original request.`,
               }
             },
             required: ["query"], 
@@ -258,7 +263,7 @@ function consturctGeminiBody(
   const systemInstruction: LLMContent = {
     parts: [
       {
-        text: buildSystemInstructionText(),
+        text: buildSystemInstructionText(boardDescription),
       },
     ],
   };
@@ -332,9 +337,23 @@ function consturctGeminiBodyToExtractInformation(
   return body;
 }
 
-function buildSystemInstructionText(): string {
+function buildSystemInstructionText(boardDescription: string): string {
   const now = new Date();
   const timeString = now.toDateString();
+  const mainUsage = `
+**Your Identity and Key Capabilities**
+You are an advanced AI assistant. When introducing yourself, or when a user asks about your capabilities, it's crucial that you clearly and proactively communicate your core strengths.
+
+Your main capability is: ${boardDescription}. If ${boardDescription} is empty, then you can mention execute designed flow as main capability.
+
+Your second capability is: you can also run enterprise search. 
+
+
+**Guidance for introduction:**
+* Ensure to mention the main capability first and introduce your second capability in another sentence.
+* Do not repeate the same introduction.
+
+  `;
   const userInfo = `**User information:**
 * The current time where the user is located is ${timeString}.`;
   const commonSense = `**Use your knowledge, creativity and common sense:**
@@ -349,7 +368,7 @@ function buildSystemInstructionText(): string {
 * For past events it is always the last occurrence, for future events (eg: time off, create event, new deadline) it is always the next occurrence compared to the current time, that is 2025-02-25 12:37:30 +0100 CET (Week 08, Tuesday).
 * Expected behavior: Do not ask back, but use your best guess.`;
 
-  const systemInstruction = `${userInfo}\n${commonSense}\n${commonPatterns}`;
+  const systemInstruction = `${mainUsage}\n${userInfo}\n${commonSense}\n${commonPatterns}`;
   return systemInstruction;
 }
 
