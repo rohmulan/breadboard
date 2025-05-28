@@ -259,10 +259,6 @@ export class FlowGenerator {
   }
 
   #buildSystemInstruction(params: SystemInstructionParams): string {
-    const now = new Date();
-    const timeString = now.toDateString();
-    const userInfo = `**User information:**
-* The current time where the user is located is ${timeString}.`;
     const agentName = `** User provided agent name:** ${params.agentName || ''}`;
     const agentGoal = `** User provided agent goal:** ${params.agentGoal || ''}`;
     const agentInstructions = `** User provided agent instructions:** ${params.agentInstructions || ''}`;
@@ -281,7 +277,7 @@ export class FlowGenerator {
 * Examples: "write a python code that counts the vowels in 'banana'", "what is the problem with this code? code: ...", "explain this code to me: ...", "debug this code: ...", "fix this code: ...", "write a code that calculates <task>", "how to reverse a string in java?".
 * Expected behavior: You answer the user directly with the generated code, or the explanation of the code. You make sure that you highlight the pros and cons of the various approaches.`;
 
-    const systemInstruction = `${userInfo}\n${agentName}\n${agentGoal}\n${agentInstructions}\n${commonSense}\n${commonPatterns}`;
+    const systemInstruction = `${agentName}\n${agentGoal}\n${agentInstructions}\n${commonSense}\n${commonPatterns}`;
     return systemInstruction;
   }
 }
