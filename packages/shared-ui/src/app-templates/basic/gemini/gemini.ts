@@ -83,6 +83,7 @@ export type GeminiBody = {
 export type GenerationConfig = {
   responseMimeType?: "text/plain" | "application/json" | "text/x.enum";
   responseSchema?: GeminiSchema;
+  temperature?: number;
 };
 
 export type FinishReason =
@@ -231,7 +232,7 @@ function consturctGeminiBody(
       function_declarations: [
         {
           name: "execute_flow",
-          description: `This tool is created by user to execute a specific action. The description is '${boardDescription || ""}'. Read the description and understand it. If user express any intent related the description, execute the tool directly. Never ask the input of the tool.`,
+          description: `This tool is created by user to execute a specific action. The description is '${boardDescription || ""}'. Read the description and understand it. If user express any intent related the description, always execute the tool directly. Never ask the input of the tool.`,
         },
       ],
     },
@@ -280,11 +281,16 @@ function consturctGeminiBody(
       threshold: "BLOCK_NONE",
     },
   ];
+
+  const generationConfig: GenerationConfig = {
+    temperature: 0,
+  }
   const body: GeminiBody = {
     contents: userInputContext,
     tools: tools,
     systemInstruction: systemInstruction,
     safetySettings: safetySettings,
+    generationConfig: generationConfig,
   };
   return body;
 }
