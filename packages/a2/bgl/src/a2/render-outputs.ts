@@ -195,14 +195,6 @@ async function describe({ inputs: { text } }: DescribeInputs) {
           description:
             "Type the @ character to select the outputs to combine. Optionally include style and layout guidlines if using Rendering mode of Markdown or HTML.",
         },
-        "p-render-mode": {
-          type: "string",
-          enum: [MANUAL_MODE],
-          title: "Display format",
-          behavior: ["config", "hint-preview"],
-          default: MANUAL_MODE,
-          description: "Choose how to combine and display the outputs",
-        },
         ...template.schemas(),
       },
       behavior: ["at-wireable"],
