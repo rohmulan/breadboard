@@ -222,69 +222,23 @@ class SigninAdapter {
       () => (this.#nonce = crypto.randomUUID()),
       500
     );
-    let getResponse:GetResponse|undefined = undefined;
-    const internalId = setInterval(
-      async () => {
-        if (getResponse && getResponse.access_token) {
-        } else {
-          getResponse = await this.getTokenFromConnection(nonce);
-          if (getResponse && getResponse.access_token) {
-            const connection = await this.#getConnection();
-            if (!connection) {
-              await signinCallback(new SigninAdapter());
-              return;
-            }
-            if (internalId) {
-              clearInterval(internalId);
-            }
-            const settingsValue: TokenGrant = {
-              client_id: connection.clientId,
-              access_token: getResponse.access_token,
-              expires_in: getResponse.expires_in,
-              refresh_token: getResponse.refresh_token,
-              issue_time: now,
-              name: getResponse.name,
-              picture: getResponse.picture,
-              id: getResponse.id,
-            };
-            await this.#settingsHelper?.set(SETTINGS_TYPE.CONNECTIONS, connection.id, {
-              name: connection.id,
-              value: JSON.stringify(settingsValue),
-            });
-            await signinCallback(
-              new SigninAdapter(
-                this.#tokenVendor,
-                this.#environment,
-                this.#settingsHelper
-              )
-            );
-          }
-        }
-      },
-      2000
-    );
 
-    setTimeout(
-      () => {
-        if (internalId) {
-          clearInterval(internalId);
-        }
-      },
-      2 * 1000 * 60
-    );
-
-
-    // The OAuth broker page will know to broadcast the token on this unique
-    // channel because it also knows the nonce (since we pack that in the OAuth
-    // "state" parameter).
-    const channelName = oauthTokenBroadcastChannelName(nonce);
-    const channel = new BroadcastChannel(channelName);
+    // Use window to listen to message event.
     const grantResponse = await new Promise<GrantResponse>((resolve) => {
-      channel.addEventListener("message", (m) => resolve(m.data), {
+      window.addEventListener("message", (event) => {
+          if (event.origin !== window.location.origin) {
+            return;
+          }
+          const {grantResponse, id} = event.data;
+          if (nonce !== id) {
+            return ;
+          }
+          return resolve(grantResponse);
+        }, {
         once: true,
       });
     });
-    channel.close();
+    
     if (grantResponse.error !== undefined) {
       // TODO(aomarks) Show error info in the UI.
       console.error(grantResponse.error);

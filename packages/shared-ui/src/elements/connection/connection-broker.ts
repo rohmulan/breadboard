@@ -91,6 +91,9 @@ export class ConnectionBroker extends HTMLElement {
     }
 
     // Send the grant response back to the originating tab and close up shop.
+    if (window.opener) {
+      window.opener.postMessage({grantResponse, id: nonce}, window.location.origin);
+    }
     channel.postMessage(grantResponse);
     channel.close();
     window.close();
