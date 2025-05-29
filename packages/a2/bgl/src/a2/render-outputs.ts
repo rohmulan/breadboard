@@ -203,12 +203,6 @@ async function describe({ inputs: { text } }: DescribeInputs) {
           default: MANUAL_MODE,
           description: "Choose how to combine and display the outputs",
         },
-        "b-system-instruction": {
-          type: "object",
-          behavior: ["llm-content", "config", "hint-advanced"],
-          title: "System Instruction",
-          description: "The system instruction used for auto-layout",
-        },
         ...template.schemas(),
       },
       behavior: ["at-wireable"],
