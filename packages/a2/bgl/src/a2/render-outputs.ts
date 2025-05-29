@@ -159,6 +159,7 @@ async function invoke({
   } else if (!renderMode) {
     renderMode = "Manual";
   }
+  renderMode = "Manual"; // Force manual mode for agentspace.
   console.log("Rendering mode: " + renderMode);
   let out = context;
   if (renderMode != "Manual") {
@@ -196,7 +197,7 @@ async function describe({ inputs: { text } }: DescribeInputs) {
         },
         "p-render-mode": {
           type: "string",
-          enum: [MANUAL_MODE, FLASH_MODE, PRO_MODE],
+          enum: [MANUAL_MODE],
           title: "Display format",
           behavior: ["config", "hint-preview"],
           default: MANUAL_MODE,
