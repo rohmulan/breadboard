@@ -10,11 +10,13 @@ import { MainArguments } from "./index.js";
 import { LanguagePack } from "@breadboard-ai/shared-ui/types/types.js";
 import { GoogleDriveBoardServer } from "@breadboard-ai/google-drive-kit";
 import {
+  FileSystemEntry,
   Kit,
   MutableGraphStore,
   NodeHandlerContext,
   Outcome,
 } from "@google-labs/breadboard";
+import type { EmbedHandler } from "@breadboard-ai/embed";
 
 export { bootstrap };
 
@@ -23,8 +25,28 @@ export type BootstrapArguments = {
   requiresSignin?: boolean;
   defaultBoardService?: string;
   kits?: Kit[];
+  /**
+   * Allows preloading graphs into the graphstore. Useful when you want to
+   * supply graphs that aren't part of any board server.
+   * @param graphStore
+   * @returns
+   */
   graphStorePreloader?: (graphStore: MutableGraphStore) => void;
+  /**
+   * Allows filtering what modules can be invoked by the runtime.
+   * @param context
+   * @returns
+   */
   moduleInvocationFilter?: (context: NodeHandlerContext) => Outcome<void>;
+  /**
+   * Provides a way to specify additional entries as part of the `/env/` file
+   * system.
+   */
+  env?: FileSystemEntry[];
+  /**
+   * Provides a way to handle embedded versions of Breadboard.
+   */
+  embedHandler?: EmbedHandler;
 };
 
 function getUrlFromBoardServiceFlag(
@@ -97,6 +119,10 @@ function bootstrap(args: BootstrapArguments = {}) {
   const showExtendedSettings =
     globalThis.localStorage.getItem(esKey) === "true";
 
+  if (args.embedHandler) {
+    args.embedHandler.connect();
+  }
+
   async function init() {
     await StringsHelper.initFrom(LANGUAGE_PACK as LanguagePack);
 
@@ -116,10 +142,13 @@ function bootstrap(args: BootstrapArguments = {}) {
       requiresSignin: args?.requiresSignin,
       enableTos: ENABLE_TOS,
       tosHtml: TOS_HTML,
+      environmentName: ENVIRONMENT_NAME,
       kits: args?.kits,
       showExtendedSettings,
       graphStorePreloader: args?.graphStorePreloader,
       moduleInvocationFilter: args?.moduleInvocationFilter,
+      env: args?.env,
+      embedHandler: args.embedHandler,
     };
 
     window.oncontextmenu = (evt) => evt.preventDefault();

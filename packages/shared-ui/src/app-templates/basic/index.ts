@@ -42,26 +42,22 @@ import '@material/web/button/filled-button.js';
 import '@material/web/icon/icon.js';
 import { styleMap } from "lit/directives/style-map.js";
 import {
-  AddAssetEvent,
   AddAssetRequestEvent,
   BoardDescriptionUpdateEvent,
   BoardTitleUpdateEvent,
-  InputEnterEvent,
+  ResizeEvent,
   RunEvent,
   SignInRequestedEvent,
-  StopEvent,
-  UtteranceEvent,
 } from "../../events/events";
 import { when} from "lit/directives/when.js";
 import { repeat } from "lit/directives/repeat.js";
-import { createRef, ref, Ref } from "lit/directives/ref.js";
-import { LLMContent, NodeValue, OutputValues } from "@breadboard-ai/types";
-import { isLLMContentArrayBehavior, isLLMContentBehavior } from "../../utils";
+import { createRef, Ref } from "lit/directives/ref.js";
 import { extractError } from "../shared/utils/utils";
 import { AssetShelf, BoardConversation, tokenVendorContext } from "../../elements/elements";
 import { SigninState } from "../../utils/signin-adapter";
 
 /** Included so the app can be standalone */
+import "../../elements/input/webcam/webcam-video.js";
 import "../../elements/input/add-asset/add-asset-button.js";
 import "../../elements/input/add-asset/add-asset-modal.js";
 import "../../elements/input/add-asset/asset-shelf.js";
@@ -70,11 +66,11 @@ import "../../elements/input/drawable/drawable.js";
 import './summary/summary.js';
 
 
+import "../../elements/output/header/header.js";
 import "../../elements/output/llm-output/llm-output-array.js";
 import "../../elements/output/llm-output/export-toolbar.js";
 import "../../elements/output/llm-output/llm-output.js";
 import "../../elements/output/multi-output/multi-output.js";
-import { map } from "lit/directives/map.js";
 import { markdown } from "../../directives/markdown";
 import "./text-streamer/text-streamer.js";
 import { BehaviorSubject, takeUntil, first, last} from "rxjs";
@@ -848,7 +844,7 @@ export class Template extends LitElement implements AppTemplate {
       }
     }
 
-    const styles: Record<string, string> = {};
+    let styles: Record<string, string> = {};
     if (this.options.theme) {
       styles["--primary-color"] = this.options.theme.primaryColor;
       styles["--primary-text-color"] = this.options.theme.primaryTextColor;
@@ -890,6 +886,7 @@ export class Template extends LitElement implements AppTemplate {
     const splashScreen = html`
       <div
         id="splash"
+        class=${classMap({ default: this.options.isDefaultTheme ?? false })}
         @animationend=${() => {
           this.hasRenderedSplash = true;
         }}
@@ -902,43 +899,43 @@ export class Template extends LitElement implements AppTemplate {
               return;
             }
 
-            if (
-              !(evt.target instanceof HTMLElement) ||
-              !evt.target.textContent
-            ) {
-              return;
-            }
-            const newTitle = evt.target.textContent.trim();
-            if (newTitle === this.options.title) {
-              return;
-            }
-            this.dispatchEvent(new BoardTitleUpdateEvent(newTitle));
-          }}
-        >
-          ${this.options.title}
-        </h1>
-        <p
-          ?contenteditable=${!this.readOnly}
-          @blur=${(evt: Event) => {
-            if (this.readOnly) {
-              return;
-            }
+              if (
+                !(evt.target instanceof HTMLElement) ||
+                !evt.target.textContent
+              ) {
+                return;
+              }
+              const newTitle = evt.target.textContent.trim();
+              if (newTitle === this.options.title) {
+                return;
+              }
+              this.dispatchEvent(new BoardTitleUpdateEvent(newTitle));
+            }}
+          >
+            ${this.options.title}
+          </h1>
+          <p
+            ?contenteditable=${!this.readOnly}
+            @blur=${(evt: Event) => {
+              if (this.readOnly) {
+                return;
+              }
 
-            if (this.readOnly) {
-              return;
-            }
+              if (this.readOnly) {
+                return;
+              }
 
-            if (
-              !(evt.target instanceof HTMLElement) ||
-              !evt.target.textContent
-            ) {
-              return;
-            }
+              if (
+                !(evt.target instanceof HTMLElement) ||
+                !evt.target.textContent
+              ) {
+                return;
+              }
 
-            const newDescription = evt.target.textContent.trim();
-            if (newDescription === this.options.description) {
-              return;
-            }
+              const newDescription = evt.target.textContent.trim();
+              if (newDescription === this.options.description) {
+                return;
+              }
 
             this.dispatchEvent(new BoardDescriptionUpdateEvent(newDescription));
           }}
@@ -998,7 +995,6 @@ export class Template extends LitElement implements AppTemplate {
       : [
           this.#renderLog(),
           this.#renderInput(this.topGraphResult),
-          addAssetModal,
         ]}`;
 
     if (this.isInSelectionState && this.topGraphResult.log.length === 0) {
@@ -1018,6 +1014,25 @@ export class Template extends LitElement implements AppTemplate {
       }}
     >
       <div id="content">${content}</div>
+      ${this.showContentWarning
+        ? html`<div id="content-warning">
+            <div class="message">
+              This content was created by another person. It may be inaccurate
+              or unsafe.
+              <a href="https://support.google.com/legal/answer/3110420?hl=en"
+                >Report unsafe content</a
+              >
+            </div>
+            <button
+              class="dismiss"
+              @click=${() => {
+                this.showContentWarning = false;
+              }}
+            >
+              Dismiss
+            </button>
+          </div>`
+        : nothing}
     </section>`;
   }
 

@@ -39,7 +39,6 @@ export const styles = css`
     height: 100%;
     background: var(--bb-neutral-0);
     position: relative;
-    padding: var(--bb-grid-size-4);
     container-type: size;
 
     & #status {
@@ -128,7 +127,8 @@ export const styles = css`
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-
+      flex: 1;
+      width: 100%;
       margin: 0 auto;
       max-width: 100cqmin;
       // max-height: 100cqmax;

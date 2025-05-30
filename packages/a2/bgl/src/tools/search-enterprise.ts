@@ -1,5 +1,6 @@
 /**
  * @fileoverview Search an enterprise search engine.
+ * @fileoverview Search an enterprise search engine.
  */
 
 import toolSearchEnterprise, {
@@ -16,6 +17,7 @@ type Inputs =
     }
   | {
       query: string;
+      search_engine_resource_name?: string;
       search_engine_resource_name?: string;
     };
 
@@ -54,6 +56,7 @@ async function invoke(inputs: Inputs): Promise<Outcome<Outputs>> {
   } else {
     query = inputs.query;
     search_engine_resource_name = inputs.search_engine_resource_name;
+    search_engine_resource_name = inputs.search_engine_resource_name;
     mode = "tool";
   }
   query = (query || "").trim();
@@ -65,6 +68,10 @@ async function invoke(inputs: Inputs): Promise<Outcome<Outputs>> {
   }
 
   console.log("Query: " + query);
+  const searchResults = await toolSearchEnterprise({
+    query,
+    search_engine_resource_name,
+  });
   const searchResults = await toolSearchEnterprise({
     query,
     search_engine_resource_name,
@@ -137,7 +144,7 @@ async function describe({ asType, ...inputs }: DescribeInputs) {
 
     metadata: {
       icon: "web-search",
-      tags: ["quick-access", "tool", "component"],
+      tags: ["quick-access", "tool", "component", "environment-agentspace"],
       order: 2,
     },
   };

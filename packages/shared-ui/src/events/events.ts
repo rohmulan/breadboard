@@ -1582,6 +1582,47 @@ export class BoardDeleteEvent extends Event {
   }
 }
 
+
+/** Snackbar */
+
+export class SnackbarActionEvent extends Event {
+  static eventName = "bbsnackbaraction";
+
+  constructor(
+    public readonly action: string,
+    public readonly value?: string
+  ) {
+    super(SnackbarActionEvent.eventName, { ...eventInit });
+  }
+}
+
+/** Iterate on prompt button press. */
+
+export class IterateOnPromptEvent extends Event {
+  static eventName = "bbiterateonprompt";
+
+  constructor(
+    public readonly title: string,
+    public readonly promptTemplate: string,
+    public readonly boardId: string,
+    public readonly nodeId: string,
+    public readonly modelId: string | null
+  ) {
+    super(IterateOnPromptEvent.eventName, { ...eventInit });
+  }
+}
+
+/** Floating Input */
+
+export class ResizeEvent extends Event {
+  static eventName = "bbresize";
+
+  constructor(public readonly contentRect: DOMRect) {
+    super(ResizeEvent.eventName, { ...eventInit });
+  }
+}
+
+
 export class EditBoardDetailsEvent extends Event {
   static eventName = 'bbeditboarddetails';
 

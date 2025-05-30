@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import express, { type Request } from "express";
 import ViteExpress from "vite-express";
 
@@ -5,14 +11,25 @@ import * as connectionServer from "@breadboard-ai/connection-server";
 import * as boardServer from "@breadboard-ai/board-server";
 import { InputValues, NodeDescriptor } from "@breadboard-ai/types";
 
+import { makeDriveProxyMiddleware } from "./drive-proxy.js";
+import { allowListChecker } from "./allow-list-checker.js";
+
 const server = express();
+
+const { BACKEND_API_ENDPOINT } = process.env;
 
 const boardServerConfig = boardServer.createServerConfig({
   storageProvider: "application-integration",
 });
-const connectionServerConfig = await connectionServer.createServerConfig();
+const connectionServerConfig = {
+  ...(await connectionServer.createServerConfig()),
+  validateResponse: allowListChecker(
+    BACKEND_API_ENDPOINT && new URL(BACKEND_API_ENDPOINT)
+  ),
+};
 
 boardServer.addMiddleware(server, boardServerConfig);
+server.use("/policy", express.static("langs/policy"));
 server.use("/board", boardServer.createRouter(boardServerConfig));
 
 server.use(
@@ -22,10 +39,12 @@ server.use(
 
 server.use("/app/@:user/:name", boardServer.middlewares.loadBoard());
 
+server.use("/drive-proxy", makeDriveProxyMiddleware());
+
 ViteExpress.config({
   transformer: (html: string, req: Request) => {
     const board = req.res?.locals.loadedBoard;
-    const displayName = board?.displayName || "Not Found";
+    const displayName = board?.displayName || "Loading ...";
     return html.replace("{{displayName}}", escape(displayName));
   },
 });

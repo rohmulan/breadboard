@@ -183,36 +183,6 @@ export class Renderer extends LitElement {
       touch-action: none;
     }
 
-    :host([readonly])::after {
-      content: "";
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0);
-      top: 0;
-      left: 0;
-      z-index: 100;
-    }
-
-    :host([readonly])::before {
-      content: "Read Only";
-      display: flex;
-      align-items: center;
-      box-sizing: border-box;
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      translate: -50% 0;
-      border-radius: var(--bb-grid-size-16);
-      height: var(--bb-grid-size-7);
-      border: 1px solid var(--bb-ui-200);
-      background: var(--bb-ui-100);
-      color: var(--bb-ui-800);
-      padding: 0 var(--bb-grid-size-3);
-      font: 400 var(--bb-label-small) / var(--bb-label-line-height-small)
-        var(--bb-font-family);
-    }
-
     :host([interactionmode="pan"]) {
       cursor: grab;
     }
@@ -352,6 +322,10 @@ export class Renderer extends LitElement {
   #handleNewAssets(evt: CreateNewAssetsEvent) {
     evt.stopImmediatePropagation();
 
+    if (this.readOnly) {
+      return;
+    }
+
     // Augment the added assets with the x & y coordinates of the
     // middle of the graph and dispatch the dropped assets event.
 
@@ -398,7 +372,8 @@ export class Renderer extends LitElement {
     if (
       !evt.dataTransfer ||
       !evt.dataTransfer.files ||
-      !evt.dataTransfer.files.length
+      !evt.dataTransfer.files.length ||
+      this.readOnly
     ) {
       return;
     }
@@ -495,6 +470,7 @@ export class Renderer extends LitElement {
   }
 
   #getGraphTitleByType(nodeType: string) {
+    // TODO: Move this logic to Runtime.Edit
     let title = "Untitled item";
     for (const graph of this.graphStore?.graphs() ?? []) {
       if (graph.url === nodeType && graph.title) {
@@ -503,7 +479,30 @@ export class Renderer extends LitElement {
       }
     }
 
+    // Friendly names logic. Optionally appends a number to the title so that
+    // the user can disambiguate between multiple steps of the same type.
+    let maxNumber = -1;
+    for (const node of this.graph?.nodes() || []) {
+      if (node.descriptor.type !== nodeType) continue;
+      const nodeFullTitle = node.descriptor.metadata?.title;
+      if (!nodeFullTitle) continue;
+      const { nodeTitle, number } = extractNumber(nodeFullTitle);
+      if (nodeTitle !== title) continue;
+      maxNumber = number;
+    }
+    if (maxNumber >= 0) {
+      return `${title} ${maxNumber + 1}`;
+    }
+
     return title;
+
+    function extractNumber(s: string): { nodeTitle: string; number: number } {
+      const match = / (\d+)$/.exec(s);
+      if (!match || !match[1]) return { nodeTitle: s, number: 0 };
+      const number = parseInt(match[1], 10);
+      const nodeTitle = s.substring(0, match.index);
+      return { number, nodeTitle };
+    }
   }
 
   #createNode(
@@ -888,7 +887,8 @@ export class Renderer extends LitElement {
     if (
       (changedProperties.has("graph") ||
         changedProperties.has("graphTopologyUpdateId") ||
-        changedProperties.has("allowEdgeAttachmentMove")) &&
+        changedProperties.has("allowEdgeAttachmentMove") ||
+        changedProperties.has("readOnly")) &&
       this.graph &&
       this.camera
     ) {
@@ -915,6 +915,7 @@ export class Renderer extends LitElement {
       mainGraph.nodes = this.graph.nodes();
       mainGraph.edges = this.graph.edges();
       mainGraph.rendererState = this.state;
+      mainGraph.readOnly = this.readOnly;
       if (this.showAssetsInGraph) {
         mainGraph.assets = this.graph.assets();
         mainGraph.assetEdges = this.graph.assetEdges();
@@ -1562,6 +1563,7 @@ export class Renderer extends LitElement {
         .mainGraphId=${this.mainGraphId}
         .showDefaultAdd=${showDefaultAdd}
         .showExperimentalComponents=${this.showExperimentalComponents}
+        .readOnly=${this.readOnly}
         @wheel=${(evt: WheelEvent) => {
           evt.stopImmediatePropagation();
         }}

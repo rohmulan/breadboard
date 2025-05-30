@@ -39,7 +39,6 @@ export default async ({ mode }: UserConfig) => {
     worker: "src/worker.ts",
     sample: "./index.html",
     oauth: "./oauth/index.html",
-    bbrt: "./experimental/bbrt/index.html",
   };
 
   if (mode === "development") {
@@ -63,14 +62,6 @@ export default async ({ mode }: UserConfig) => {
       },
     },
     plugins: [noHrmlForDir("packages/a2")],
-    optimizeDeps: {
-      exclude: [
-        // @breadboard-ai/python-wasm has dependency on pyodide (which is the
-        // Python WASM runtime), but it's not compatible with Vite
-        // optimizations.
-        "pyodide",
-      ],
-    },
     resolve: {
       dedupe: ["lit"],
     },

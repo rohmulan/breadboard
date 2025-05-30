@@ -9,6 +9,8 @@ import { css } from "lit";
 export default css`
   @scope (.app-template.light) {
     :scope {
+      --bb-icon-color: var(--bb-neutral-900);
+
       --bb-progress: url(/images/progress.svg);
 
       --bb-icon-add: url(/third_party/icons/add.svg);
@@ -488,6 +490,8 @@ export default css`
   @scope (.app-template.dark) {
     :scope {
       --bb-loader-opacity: 0.5;
+      --bb-icon-color: var(--bb-neutral-0);
+
       --bb-progress: url(/images/progress-inverted.svg);
 
       --bb-icon-add: url(/third_party/icons/add-inverted.svg);

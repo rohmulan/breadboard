@@ -9,7 +9,7 @@ import { consume } from "@lit/context";
 import * as StringsHelper from "../../strings/helper.js";
 const Strings = StringsHelper.forSection("AppPreview");
 
-import { LitElement, PropertyValues, html } from "lit";
+import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import {
   BoardServer,
@@ -32,8 +32,13 @@ import {
   agentspaceUrlContext,
   type AgentspaceFlowContent,
 } from "../../contexts/agentspace-url-context.js";
-import { getGlobalColor } from "../../utils/color.js";
 import { classMap } from "lit/directives/class-map.js";
+import { consume } from "@lit/context";
+import { googleDriveClientContext } from "../../contexts/google-drive-client-context.js";
+import { GoogleDriveClient } from "@breadboard-ai/google-drive-kit/google-drive-client.js";
+import { loadImage } from "../../utils/image.js";
+import { blobHandleToUrl } from "../../utils/blob-handle-to-url.js";
+import { generatePaletteFromColor } from "@breadboard-ai/theme";
 
 const primaryColor = getGlobalColor("--bb-ui-700");
 const secondaryColor = getGlobalColor("--bb-ui-400");
@@ -114,6 +119,9 @@ export class AppPreview extends LitElement {
   accessor eventPosition = 0;
 
   @property()
+  accessor isMine = false;
+
+  @property()
   accessor isInSelectionState = false;
 
   @property()
@@ -152,6 +160,9 @@ export class AppPreview extends LitElement {
   @state()
   accessor _originalTheme: AppTheme | null = null;
 
+  @consume({ context: googleDriveClientContext })
+  accessor googleDriveClient!: GoogleDriveClient | undefined;
+
   static styles = appPreviewStyles;
 
   #loadingTemplate = false;
@@ -168,7 +179,10 @@ export class AppPreview extends LitElement {
   }
 
   #createDefaultTheme(): AppTheme {
+    const palette = generatePaletteFromColor("#f82506");
+
     return {
+      ...palette,
       primaryColor: primaryColor,
       secondaryColor: secondaryColor,
       backgroundColor: backgroundColor,
@@ -240,6 +254,7 @@ export class AppPreview extends LitElement {
       const { themes, theme } = this.graph.metadata.visual.presentation;
       if (themes[theme]) {
         templateAdditionalOptions = themes[theme].templateAdditionalOptions;
+        options.isDefaultTheme = themes[theme].isDefaultTheme;
       }
     } else if (
       this.graph?.metadata?.visual?.presentation?.templateAdditionalOptions
@@ -281,9 +296,9 @@ export class AppPreview extends LitElement {
               return;
             }
 
-            let url = splashScreen.storedData.handle;
-            if (url.startsWith(".") && this.graph?.url) {
-              url = new URL(url, this.graph?.url).href;
+            const url = blobHandleToUrl(splashScreen.storedData.handle)?.href;
+            if (!url) {
+              return "";
             }
 
             const cachedSplashImage = this.#splashImage.get(url);
@@ -292,17 +307,11 @@ export class AppPreview extends LitElement {
             } else {
               this.#splashImage.clear();
 
-              const response = await fetch(url);
-              const data = await response.blob();
-              return new Promise<string>((resolve) => {
-                const reader = new FileReader();
-                reader.addEventListener("loadend", () => {
-                  const result = reader.result as string;
-                  this.#splashImage.set(url, result);
-                  resolve(result);
-                });
-                reader.readAsDataURL(data);
-              });
+              const imageData = await loadImage(this.googleDriveClient!, url);
+              if (imageData) {
+                this.#splashImage.set(url, imageData);
+              }
+              return imageData;
             }
           })
           .then((base64DataUrl) => {
@@ -469,6 +478,7 @@ export class AppPreview extends LitElement {
       this.#appTemplate.showingOlderResult = this.showingOlderResult;
       this.#appTemplate.readOnly = false;
       this.#appTemplate.showShareButton = false;
+      this.#appTemplate.showContentWarning = !this.isMine;
     }
 
     return html`

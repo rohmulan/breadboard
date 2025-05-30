@@ -906,6 +906,13 @@ export const styles = css`
     }
   }
 
+  bb-console-view {
+    height: 100%;
+    overflow: auto;
+    position: relative;
+    scroll-padding-bottom: 60px;
+  }
+
   bb-capabilities-selector,
   #history-activity-container,
   bb-app-preview,
@@ -915,5 +922,9 @@ export const styles = css`
     &.active {
       display: block;
     }
+  }
+
+  bb-console-view:not(.active) {
+    display: none;
   }
 `;
