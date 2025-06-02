@@ -1005,6 +1005,7 @@ export class Main extends LitElement {
     window.addEventListener("pointerdown", this.#hideTooltipBound);
     window.addEventListener("keydown", this.#onKeyDownBound);
     window.addEventListener("bbrundownload", this.#downloadRunBound);
+    window.addEventListener("bbeditboarddetails", this.#onShowBoardEditOverlayWithEventBound);
 
     if (this.#embedHandler) {
       this.embedState = embedState();
@@ -1062,7 +1063,6 @@ export class Main extends LitElement {
       type: "board_id_created",
       id: boardData.url.href,
     });
-    window.addEventListener("bbeditboarddetails", this.#onShowBoardEditOverlayWithEventBound);
   }
 
   disconnectedCallback(): void {
