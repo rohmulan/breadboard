@@ -106,29 +106,6 @@ export class LLMOutput extends LitElement {
       // border-radius: var(--output-border-radius, var(--bb-grid-size));
       margin-bottom: var(--bb-grid-size-2);
       background: var(--background-color, var(--output-background-color, transparent));
-
-        --md-h1-font: 500 var(--bb-title-large) /
-          var(--bb-title-line-height-large) var(--bb-font-family);
-        --md-h1-margin: var(--bb-grid-size-6) 0 var(--bb-grid-size-2) 0;
-
-        --md-h2-font: 500 var(--bb-title-medium) /
-          var(--bb-title-line-height-medium) var(--bb-font-family);
-        --md-h2-margin: var(--bb-grid-size-4) 0 var(--bb-grid-size-2) 0;
-
-        --md-h-font: 500 var(--bb-title-small) /
-          var(--bb-title-line-height-small) var(--bb-font-family);
-        --md-h-margin: var(--bb-grid-size-3) 0 var(--bb-grid-size-2) 0;
-
-        --md-p-font: 400 var(--bb-body-medium) /
-          var(--bb-body-line-height-medium) var(--bb-font-family);
-        --md-p-margin: 0 0 var(--bb-grid-size-2) 0;
-        --md-p-text-align: left;
-        --md-color: var(--bb-neutral-900);
-        --md-a-color: var(--primary-color, var(--bb-ui-700));
-
-        & .content {
-          border-radius: var(--output-border-radius, var(--bb-grid-size));
-        }
       }
 
       :host([clamped]) {
@@ -337,9 +314,7 @@ export class LLMOutput extends LitElement {
           }
 
           & p {
-            font: var(--md-p-font);
             margin: var(--md-p-margin);
-            text-align: var(--md-p-text-align);
             white-space: pre-line;
 
             & strong:only-child {

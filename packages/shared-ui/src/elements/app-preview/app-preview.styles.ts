@@ -39,6 +39,7 @@ export const styles = css`
     height: 100%;
     background: var(--bb-neutral-0);
     position: relative;
+    padding: var(--bb-grid-size-4);
     container-type: size;
 
     & #status {

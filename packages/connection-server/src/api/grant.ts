@@ -32,7 +32,6 @@ export async function grant(
   req: IncomingMessage,
   res: ServerResponse,
   config: ServerConfig,
-  cache: SimpleCache,
 ): Promise<void> {
   const params = Object.fromEntries(
     new URL(req.url ?? "", "http://example.com").searchParams.entries()

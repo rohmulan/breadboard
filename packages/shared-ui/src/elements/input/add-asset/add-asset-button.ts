@@ -28,7 +28,8 @@ export class AddAssetButton extends LitElement {
     upload: true,
     youtube: true,
     drawable: true,
-    gdrive: false,
+    gdrive: true,
+    webcamVideo: true,
   };
 
   @property()
@@ -160,23 +161,15 @@ export class AddAssetButton extends LitElement {
         }}
       ></bb-overflow-menu>`;
     }
-
-    return html`<button
+return html`<button
         ?disabled=${this.disabled}
         @click=${(evt: Event) => {
           if (!(evt.target instanceof HTMLButtonElement)) {
             return;
           }
 
-          const bounds = evt.target.getBoundingClientRect();
-          if (this.useGlobalPosition) {
-            this.#overflowMenu.x = bounds.x;
-            this.#overflowMenu.y = bounds.bottom + 10;
-          } else {
-            this.#overflowMenu.x = evt.target.offsetLeft - 120;
-            this.#overflowMenu.y =
-               evt.target.offsetTop + bounds.height;
-          }
+          this.#overflowMenu.x = 0;
+          this.#overflowMenu.y = 0;
 
           this._showOverflowMenu = true;
         }}

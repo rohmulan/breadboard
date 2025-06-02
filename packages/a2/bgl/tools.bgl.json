@@ -320,10 +320,6 @@
     }
   },
   "exports": [
-    "#module:get-weather",
-    "#module:search-web",
-    "#module:get-webpage",
-    "#module:search-maps",
-    "#module:search-internal"
+    "#module:search-enterprise"
   ]
 }

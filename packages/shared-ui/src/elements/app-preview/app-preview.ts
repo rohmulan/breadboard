@@ -33,12 +33,12 @@ import {
   type AgentspaceFlowContent,
 } from "../../contexts/agentspace-url-context.js";
 import { classMap } from "lit/directives/class-map.js";
-import { consume } from "@lit/context";
 import { googleDriveClientContext } from "../../contexts/google-drive-client-context.js";
 import { GoogleDriveClient } from "@breadboard-ai/google-drive-kit/google-drive-client.js";
 import { loadImage } from "../../utils/image.js";
 import { blobHandleToUrl } from "../../utils/blob-handle-to-url.js";
 import { generatePaletteFromColor } from "@breadboard-ai/theme";
+import { getGlobalColor } from "../../utils/color.js";
 
 const primaryColor = getGlobalColor("--bb-ui-700");
 const secondaryColor = getGlobalColor("--bb-ui-400");
@@ -207,7 +207,10 @@ export class AppPreview extends LitElement {
   }
 
   #createDarkTheme(): AppTheme {
+    const palette = generatePaletteFromColor("#f82506");
+
     return {
+      ...palette,
       primaryColor: primaryColorDark,
       secondaryColor: secondaryColorDark,
       backgroundColor: backgroundColorDark,

@@ -251,6 +251,7 @@ function createDefaultTheme(): AppTheme {
 
 function createDarkTheme(): AppTheme {
   return {
+    ...generatePaletteFromColor("#ffffff"),
     primaryColor: primaryColorDark,
     secondaryColor: secondaryColorDark,
     backgroundColor: backgroundColorDark,

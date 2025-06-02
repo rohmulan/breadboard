@@ -45,13 +45,15 @@ import {
   AddAssetRequestEvent,
   BoardDescriptionUpdateEvent,
   BoardTitleUpdateEvent,
+  InputEnterEvent,
   ResizeEvent,
   RunEvent,
   SignInRequestedEvent,
+  StopEvent,
 } from "../../events/events";
 import { when} from "lit/directives/when.js";
 import { repeat } from "lit/directives/repeat.js";
-import { createRef, Ref } from "lit/directives/ref.js";
+import { createRef, ref, Ref } from "lit/directives/ref.js";
 import { extractError } from "../shared/utils/utils";
 import { AssetShelf, BoardConversation, tokenVendorContext } from "../../elements/elements";
 import { SigninState } from "../../utils/signin-adapter";
@@ -83,6 +85,9 @@ import { InputStageResult } from "../../../../breadboard/dist/src/run";
 import { ConversationElement } from "../../elements/board-conversation/board-conversation";
 import { consume } from "@lit/context";
 import { TokenVendor } from "@breadboard-ai/connection-client";
+import { LLMContent, NodeValue, OutputValues } from "@breadboard-ai/types";
+import { isLLMContentArrayBehavior, isLLMContentBehavior } from "../../utils";
+import { map } from "lit/directives/map.js";
 
 @customElement("app-basic")
 export class Template extends LitElement implements AppTemplate {
@@ -184,6 +189,7 @@ export class Template extends LitElement implements AppTemplate {
 
   #allowedMimeTypes: string | null = null;
   #conversationManager = new ConversationManager();
+  showContentWarning = false;
 
   get additionalOptions() {
     return {
@@ -969,25 +975,6 @@ export class Template extends LitElement implements AppTemplate {
         </div>
       </div>
     `;
-
-    let addAssetModal: HTMLTemplateResult | symbol = nothing;
-    if (this.showAddAssetModal) {
-      addAssetModal = html`<bb-add-asset-modal
-        .assetType=${this.#addAssetType}
-        .allowedMimeTypes=${this.#allowedMimeTypes}
-        @bboverlaydismissed=${() => {
-          this.showAddAssetModal = false;
-        }}
-        @bbaddasset=${(evt: AddAssetEvent) => {
-          if (!this.#assetShelfRef.value) {
-            return;
-          }
-
-          this.showAddAssetModal = false;
-          this.#assetShelfRef.value.addAsset(evt.asset);
-        }}
-      ></bb-add-asset-modal>`;
-    }
 
     let content: HTMLTemplateResult | symbol = html`${
     !this.conversationRendered
