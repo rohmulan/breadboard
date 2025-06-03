@@ -1001,25 +1001,6 @@ export class Template extends LitElement implements AppTemplate {
       }}
     >
       <div id="content">${content}</div>
-      ${this.showContentWarning
-        ? html`<div id="content-warning">
-            <div class="message">
-              This content was created by another person. It may be inaccurate
-              or unsafe.
-              <a href="https://support.google.com/legal/answer/3110420?hl=en"
-                >Report unsafe content</a
-              >
-            </div>
-            <button
-              class="dismiss"
-              @click=${() => {
-                this.showContentWarning = false;
-              }}
-            >
-              Dismiss
-            </button>
-          </div>`
-        : nothing}
     </section>`;
   }
 

@@ -1039,7 +1039,7 @@ export class Board extends EventTarget {
 
     for (const store of boardServer.items().values()) {
       for (const item of store.items.values()) {
-        if (item.url !== url && item.url.replace(USER_REGEX, "/") !== url) {
+        if (item.url !== url && item.url.replace(USER_REGEX, "/") !== url.replace(USER_REGEX, "/")) {
           continue;
         }
 
