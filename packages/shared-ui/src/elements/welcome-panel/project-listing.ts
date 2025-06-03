@@ -765,7 +765,7 @@ export class ProjectListing extends LitElement {
         </h2>`;
 
     return html`
-      <div id="wrapper" ${ref(this.#wrapperRef)}>
+      <div id="wrapper" ${ref(this.#wrapperRef)} class=${classMap({ "inside-agentspace": this.agentspaceFlowContent.isIframe })}>
         <section id="hero">
           <h1 style="${this.agentspaceFlowContent.isIframe? "display:none":""}">
             <span class="gradient"

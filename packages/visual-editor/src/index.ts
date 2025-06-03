@@ -1692,7 +1692,7 @@ export class Main extends LitElement {
     }
 
     let id: BreadboardUI.Types.SnackbarUUID | undefined;
-    if (ackUser) {
+    if (ackUser && !this.agentspaceUrl.isIframe) {
       id = this.snackbar(
         ackUserMessage.start,
         BreadboardUI.Types.SnackType.INFORMATION,
@@ -1711,7 +1711,7 @@ export class Main extends LitElement {
     this.#isSaving = false;
 
     if (!result || !url) {
-      if (ackUser && id) {
+      if (ackUser && id && !this.agentspaceUrl.isIframe) {
         this.snackbar(
           error || ackUserMessage.error,
           BreadboardUI.Types.SnackType.ERROR,
