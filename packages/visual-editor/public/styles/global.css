@@ -1035,6 +1035,9 @@ body.hide-cursor {
   --bb-icon-fit: url(/third_party/icons/fit-inverted.svg);
   --bb-icon-fit-inverted: url(/third_party/icons/fit.svg);
 
+  --bb-icon-responsive-layout: url(/third_party/icons/responsive-layout-inverted.svg);
+  --bb-icon-chat-mirror: url(/third_party/icons/chat-mirror-inverted.svg);
+
   --bb-icon-folder-managed: url(/third_party/icons/folder-managed-inverted.svg);
   --bb-icon-folder-managed-inverted: url(/third_party/icons/folder-managed.svg);
 
