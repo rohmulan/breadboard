@@ -821,7 +821,6 @@ export class UI extends LitElement {
                     <span class="g-icon">history</span>
                   </button>`}
 
-              <button id="share" @click=${this.#onClickShareButton}>URL</button>
             </div>
           </div>
           <div id="side-nav-content">${sideNavItem}</div>
